@@ -12,8 +12,9 @@ pygame.init()
 GRID_W = 24
 GRID_H = 16
 CELL_SIZE = 40         # 윈도우: 24*40=960, 16*40=640
+TOP_MARGIN = 40
 SCREEN_W = GRID_W * CELL_SIZE
-SCREEN_H = GRID_H * CELL_SIZE + 80  # 아래 UI 영역 확보
+SCREEN_H = GRID_H * CELL_SIZE + TOP_MARGIN +80  # 아래 UI 영역 확보
 FPS = 60
 
 # 색상
@@ -274,7 +275,11 @@ class Game:
         self.current_target_preview = []
         # deck cycling
         self.init_defaults()
-
+        # movement control
+        self.move_path = []  # 리스트로 남은 스텝 저장
+        self.move_timer = 0.0  # 다음 스텝까지 남은 시간
+        self.base_move_interval = 0.3
+        # haste bonus existing: player_speed_bonus used currently; we'll use player_speed_bonus to temporarily override interval
     def init_defaults(self):
         # place player near center
         self.player.x = GRID_W//2

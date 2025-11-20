@@ -40,8 +40,10 @@ class Cell:
         self.hp = 1
         self.max_hp = 3
         self.dead = False   # '죽은 칸' flag (여우의 가시로 생성, 회복 불가 unless re건축)
+
     def rect(self):
-        return pygame.Rect(self.x*CELL_SIZE, self.y*CELL_SIZE, CELL_SIZE, CELL_SIZE)
+        return pygame.Rect(self.x * CELL_SIZE, self.y * CELL_SIZE + TOP_MARGIN, CELL_SIZE, CELL_SIZE)
+
 
 class SkillTargetRule:
     """타겟 영역 계산 (마우스 기준)"""
@@ -280,6 +282,9 @@ class Game:
         self.move_timer = 0.0  # 다음 스텝까지 남은 시간
         self.base_move_interval = 0.3
         # haste bonus existing: player_speed_bonus used currently; we'll use player_speed_bonus to temporarily override interval
+        self.pending_card_index = None
+        self.pending_preview = None  # dict as above
+        self.messages = []  # list of tuples (text, remaining_time)
     def init_defaults(self):
         # place player near center
         self.player.x = GRID_W//2
@@ -288,6 +293,30 @@ class Game:
         self.selection_slots = random.sample(CRAB_SKILLS*2, 8)
         # money start
         self.money = 0
+
+    def show_message(self, text, duration=2.0):
+        self.messages.append([text, duration])
+    def build_preview_for_card(self, index, mouse_pos):
+        card = self.hand[index]
+        if card is None:
+            return None
+        # if target_all: coords are whole map, center can be None
+        if card.target_all:
+            coords = [(x, y) for x in range(GRID_W) for y in range(GRID_H)]
+            center = None
+        else:
+            px, py = mouse_pos
+            # adjust TOP_MARGIN for y:
+            py_adj = py - TOP_MARGIN
+            center_cell = (px // CELL_SIZE, py_adj // CELL_SIZE)
+            coords = SkillTargetRule.area_from_mouse(px, py, card.target_w, card.target_h)
+            center = center_cell
+        return {"index": index, "center": center, "coords": coords, "card": card}
+
+    def clear_pending_card_preview(self):
+        self.pending_card_index = None
+        self.pending_preview = None
+        self.current_target_preview = []  # also clear visual preview
 
     def schedule_delayed(self, func, delay):
         self.scheduled.append([delay, func])
@@ -378,6 +407,11 @@ class Game:
             sk.effect(self, coords)
 
     def update(self, dt):
+        # messages
+        for m in list(self.messages):
+            m[1] -= dt
+            if m[1] <= 0:
+                self.messages.remove(m)
         # money regen
         self.money_timer += dt
         if self.money_timer >= 1.0:
@@ -385,6 +419,52 @@ class Game:
             self.money = min(12, self.money + 1)
         # scheduled events
         self.update_scheduled(dt)
+        # handle movement steps
+        if self.move_path:
+            # determine interval (haste)
+            interval = self.player_speed_bonus if self.player_speed_bonus is not None else self.base_move_interval
+            # if player_haste_timer active but player_speed_bonus None -> keep as base (we'll set player_speed_bonus in haste effect)
+            self.move_timer -= dt
+            if self.move_timer <= 0:
+                # step to next cell
+                nx, ny = self.move_path.pop(0)
+                cell = self.grid[ny][nx]
+                # stepping rules (same as before)
+                if cell.hp <= 0 or cell.dead:
+                    if not self.player.invulnerable:
+                        self.player.hp -= 1
+                        # check game over
+                        if self.player.hp <= 0:
+                            self.on_player_death()
+                            # clear pathway to stop further movement
+                            self.move_path = []
+                            self.move_timer = 0
+                            # don't continue stepping
+                            # (on_player_death sets state to GAME_OVER)
+                        else:
+                            # teleport to safe cell
+                            found = False
+                            for yrow in range(GRID_H):
+                                for xcell in range(GRID_W):
+                                    c = self.grid[yrow][xcell]
+                                    if c.hp >= 1 and not c.dead:
+                                        self.player.x = xcell
+                                        self.player.y = yrow
+                                        found = True
+                                        break
+                                if found: break
+                            self.player.invulnerable = True
+                            self.player.invul_timer = 1.0
+                            # stop remaining path because we teleported
+                            self.move_path = []
+                            self.move_timer = 0
+                else:
+                    # normal step
+                    self.player.x = nx
+                    self.player.y = ny
+                    # continue with remaining path
+                    self.move_timer += interval  # schedule next step
+
         # fox timers
         self.fox_timer -= dt
         if self.fox_timer <= 0:
@@ -421,7 +501,7 @@ class Game:
                 pygame.draw.rect(self.screen, color, r)
                 pygame.draw.rect(self.screen, BLACK, r, 1)
                 # draw hp text small
-                txt = FONT.render(f"{cell.hp}/{cell.max_hp}" if not cell.dead else "DEAD", True, BLACK if not cell.dead else RED)
+                txt = FONT.render(f"{cell.hp}" if not cell.dead else "D", True, BLACK if not cell.dead else RED)
                 self.screen.blit(txt, (x*CELL_SIZE+2, y*CELL_SIZE+2))
 
     def draw_ui(self):
@@ -455,6 +535,15 @@ class Game:
             s = pygame.Surface((CELL_SIZE, CELL_SIZE), pygame.SRCALPHA)
             s.fill((255,255,0,80))
             self.screen.blit(s, r.topleft)
+
+    def on_player_death(self):
+        self.state = "GAME_OVER"
+        self.move_path = []
+        self.pending_preview = None
+        self.pending_card_index = None
+        self.current_target_preview = []
+        # optional: schedule to show restart or quit
+        self.show_message("게임 오버 - R 키로 재시작", 9999)
 
     def handle_card_use(self, index, mouse_pos):
         card = self.hand[index]
@@ -512,6 +601,37 @@ class Game:
         self.draw_ui()
         pygame.display.flip()
 
+    def draw_top_banner(self):
+        # draw top banner rect
+        banner_rect = pygame.Rect(0, 0, SCREEN_W, TOP_MARGIN)
+        pygame.draw.rect(self.screen, (40, 40, 40), banner_rect)
+        # draw messages: show most recent (or first) centered
+        if self.messages:
+            txt = FONT.render(self.messages[0][0], True, WHITE)
+            self.screen.blit(txt, (10, (TOP_MARGIN - txt.get_height()) // 2))
+
+    def execute_card_use(self, index, coords):
+        card = self.hand[index]
+        if card is None: return
+        if self.money < card.cost:
+            # optional: show message "돈 부족"
+            return
+        # consume money
+        self.money -= card.cost
+        # perform effect immediately or schedule
+        if card.delay > 0:
+            self.current_target_preview = coords
+            self.schedule_delayed(lambda c=coords, s=card: s.effect(self, c), card.delay)
+        else:
+            card.effect(self, coords)
+        # move used card to deck end and draw new
+        used = self.hand[index]
+        self.deck.append(used)
+        if self.deck:
+            self.hand[index] = self.deck.popleft()
+        else:
+            self.hand[index] = None
+
     def run(self):
         running = True
         while running:
@@ -559,54 +679,68 @@ class Game:
                                 print("5개 선택해야 합니다.")
                 elif self.state == "PLAY":
                     if event.type == pygame.MOUSEBUTTONDOWN:
-                        # move player to clicked cell
-                        mx,my = pygame.mouse.get_pos()
-                        if my < GRID_H*CELL_SIZE:
+                        mx, my = pygame.mouse.get_pos()
+                        # only if clicked inside grid area (consider TOP_MARGIN)
+                        if TOP_MARGIN <= my < TOP_MARGIN + GRID_H * CELL_SIZE:
                             tx = mx // CELL_SIZE
-                            ty = my // CELL_SIZE
-                            # move: X first then Y; instant change with delays simulated via steps
-                            # For simplicity, teleport step-by-step instantly (can be animated)
-                            # If stepping onto dead cell or hp0 -> take damage
+                            ty = (my - TOP_MARGIN) // CELL_SIZE  # 중요: TOP_MARGIN 보정
                             if self.player.can_move:
+                                # build path: X first, then Y
                                 path = []
-                                # move x
-                                cx,cy = self.player.x, self.player.y
+                                cx, cy = self.player.x, self.player.y
                                 while cx != tx:
                                     cx += 1 if tx > cx else -1
-                                    path.append((cx,cy))
+                                    path.append((cx, cy))
                                 while cy != ty:
                                     cy += 1 if ty > cy else -1
-                                    path.append((cx,cy))
-                                for (nx,ny) in path:
-                                    # stepping rule
-                                    cell = self.grid[ny][nx]
-                                    if cell.hp <= 0 or cell.dead:
-                                        if not self.player.invulnerable:
-                                            self.player.hp -= 1
-                                            # teleport to any cell with hp>=1 (choose center)
-                                            # find a safe cell
-                                            found = False
-                                            for yrow in range(GRID_H):
-                                                for xcell in range(GRID_W):
-                                                    if self.grid[yrow][xcell].hp >= 1 and not self.grid[yrow][xcell].dead:
-                                                        self.player.x = xcell
-                                                        self.player.y = yrow
-                                                        found = True
-                                                        break
-                                                if found: break
-                                            # invulnerable 1s
-                                            self.player.invulnerable = True
-                                            self.player.invul_timer = 1.0
-                                            break
-                                    else:
-                                        self.player.x = nx
-                                        self.player.y = ny
+                                    path.append((cx, cy))
+                                # assign to move_path and reset timer so update() will start stepping immediately
+                                self.move_path = path
+                                self.move_timer = 0.0
+                                # also clear any pending skill target preview (see 항목 2)
+                                self.clear_pending_card_preview()
+
                     if event.type == pygame.KEYDOWN:
-                        keymap = {pygame.K_q:0, pygame.K_w:1, pygame.K_e:2, pygame.K_r:3}
+                        keymap = {pygame.K_q: 0, pygame.K_w: 1, pygame.K_e: 2, pygame.K_r: 3}
                         if event.key in keymap:
                             idx = keymap[event.key]
-                            mx,my = pygame.mouse.get_pos()
-                            self.handle_card_use(idx, (mx,my))
+                            mx, my = pygame.mouse.get_pos()
+                            # Build new preview for the clicked mouse pos
+                            new_preview = self.build_preview_for_card(idx, (mx, my))
+                            if new_preview is None:
+                                # empty slot -> ignore
+                                continue
+                            # If no pending preview -> set it
+                            if self.pending_preview is None:
+                                self.pending_preview = new_preview
+                                self.pending_card_index = idx
+                                self.current_target_preview = new_preview["coords"]
+                            else:
+                                # if same index and same center -> execute
+                                if self.pending_card_index == idx and new_preview["center"] == self.pending_preview[
+                                    "center"]:
+                                    # execute skill
+                                    self.execute_card_use(idx, new_preview["coords"])
+                                    self.clear_pending_card_preview()
+                                else:
+                                    # different center or different index -> replace preview
+                                    self.pending_preview = new_preview
+                                    self.pending_card_index = idx
+                                    self.current_target_preview = new_preview["coords"]
+
+                elif self.state == "GAME_OVER":
+                    # draw last frame background and overlay
+                    self.draw()  # existing draw draws grid+ui
+                    overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
+                    overlay.fill((0, 0, 0, 160))
+                    self.screen.blit(overlay, (0, 0))
+                    go = BIGFONT.render("GAME OVER", True, RED)
+                    sub = FONT.render("R: 재시작  Q: 종료", True, WHITE)
+                    self.screen.blit(go, (SCREEN_W // 2 - go.get_width() // 2, SCREEN_H // 2 - 40))
+                    self.screen.blit(sub, (SCREEN_W // 2 - sub.get_width() // 2, SCREEN_H // 2 + 10))
+                    pygame.display.flip()
+                    # capture restart / quit keys independently (in event loop)
+
             # update
             self.update(dt)
             # draw different states

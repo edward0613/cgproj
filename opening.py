@@ -23,86 +23,135 @@ shore_bg = pygame.image.load("shore.jpeg").convert()
 shore_bg = pygame.transform.scale(shore_bg, (WIDTH, HEIGHT))
 
 # 게 이미지 (1/4 크기)
-crab_img = pygame.image.load("crab1.png").convert_alpha()
-w_crab, h_crab = crab_img.get_size()
-crab_img = pygame.transform.scale(crab_img, (int(w_crab / 4), int(h_crab / 4)))
+crab_img_raw = pygame.image.load("crab1.png").convert_alpha()
+w_crab, h_crab = crab_img_raw.get_size()
+crab_img = pygame.transform.scale(crab_img_raw, (int(w_crab / 4), int(h_crab / 4)))
 
 # 여우 이미지 (1/4 크기)
-fox_img = pygame.image.load("fox1.png").convert_alpha()
-w_fox, h_fox = fox_img.get_size()
-fox_img = pygame.transform.scale(fox_img, (int(w_fox / 4), int(h_fox / 4)))
+fox_img_raw = pygame.image.load("fox1.png").convert_alpha()
+w_fox, h_fox = fox_img_raw.get_size()
+fox_img = pygame.transform.scale(fox_img_raw, (int(w_fox / 4), int(h_fox / 4)))
 
 
-# ===== 말풍선 그리기 함수 (수정됨) =====
-def draw_speech_bubble(
-    surface,
-    char_x,
-    char_y,
-    char_w,
-    char_h,
-    full_lines,     # 전체 텍스트 줄 리스트(크기 계산용, 고정)
-    render_lines,   # 현재까지 보여줄 텍스트 줄 리스트(타자 효과용)
-    direction="right",
-):
+# ===== 캐릭터 클래스 =====
+class Character:
+    def __init__(self, image: pygame.Surface, x: float = 0, y: float = 0):
+        self.image = image
+        self.x = x
+        self.y = y
 
-    if not full_lines:
-        return
+    @property
+    def w(self):
+        return self.image.get_width()
 
-    padding = 12
-    line_height = 28
+    @property
+    def h(self):
+        return self.image.get_height()
 
-    # 전체 텍스트 길이에 따라 말풍선 크기 "한 번만" 결정
-    bubble_w = max(font_main.size(line)[0] for line in full_lines) + padding * 2
-    bubble_h = line_height * len(full_lines) + padding * 2
+    def draw(self, surface: pygame.Surface):
+        surface.blit(self.image, (self.x, self.y))
 
-    # 캐릭터 기준 말풍선 위치 계산
-    if direction == "right":
-        # 캐릭터 오른쪽 위에 딱 붙게
-        bubble_x = char_x + char_w
-        bubble_y = char_y - bubble_h - 30
-        tail_tip_x = char_x + char_w
-        tail_tip_y = char_y
-    else:  # "left"
-        # 캐릭터 왼쪽 위에 딱 붙게
-        bubble_x = char_x - bubble_w - 10
-        bubble_y = char_y - bubble_h - 30
-        tail_tip_x = char_x
-        tail_tip_y = char_y
 
-    bubble_rect = pygame.Rect(bubble_x, bubble_y, bubble_w, bubble_h)
+# ===== 말풍선 클래스 =====
+class SpeechBubble:
+    def __init__(
+        self,
+        owner: Character,
+        text: str,
+        direction: str = "right",
+        padding: int = 12,
+        line_height: int = 28,
+    ):
+        """
+        owner      : 말풍선을 붙일 캐릭터(Character)
+        text       : 전체 텍스트 (예: "문장1\n문장2")
+        direction  : "right" → 캐릭터 오른쪽 위, "left" → 캐릭터 왼쪽 위
+        padding    : 말풍선 안쪽 여백
+        line_height: 한 줄 높이
+        """
+        self.owner = owner
+        self.direction = direction
+        self.padding = padding
+        self.line_height = line_height
+        self.set_text(text)
 
-    # 말풍선 몸통
-    pygame.draw.rect(surface, (255, 255, 255), bubble_rect, border_radius=14)
-    pygame.draw.rect(surface, (0, 0, 0), bubble_rect, 3, border_radius=14)
+    def set_text(self, text: str):
+        """텍스트를 바꾸면 한 번만 크기를 다시 계산"""
+        self.text = text
+        self.full_lines = self.text.split("\n")
+        if not self.full_lines:
+            self.full_lines = [""]
 
-    base_y = bubble_y + bubble_h  # 말풍선 아래쪽에서 나옴
+        # 전체 텍스트 기준으로 말풍선 크기 고정
+        self.bubble_w = max(font_main.size(line)[0] for line in self.full_lines) + self.padding * 2
+        self.bubble_h = self.line_height * len(self.full_lines) + self.padding * 2
 
-    if direction == "right":
-        base_x1 = bubble_x + 15
-        base_x2 = bubble_x + 45
-    else:  # left
-        base_x1 = bubble_x + bubble_w - 15
-        base_x2 = bubble_x + bubble_w - 45
+    def _compute_geometry(self):
+        """캐릭터 위치와 방향에 따라 말풍선 위치 + 꼬리 위치 계산"""
+        char_x, char_y = self.owner.x, self.owner.y
+        char_w, char_h = self.owner.w, self.owner.h
 
-    tail_points = [
-        (base_x1, base_y),
-        (base_x2, base_y),
-        (tail_tip_x, tail_tip_y),
-    ]
+        if self.direction == "right":
+            bubble_x = char_x + char_w
+            bubble_y = char_y - self.bubble_h - 30
+            tail_tip_x = char_x + char_w
+            tail_tip_y = char_y
+        else:
+            bubble_x = char_x - self.bubble_w - 10
+            bubble_y = char_y - self.bubble_h - 30
+            tail_tip_x = char_x
+            tail_tip_y = char_y
 
-    pygame.draw.polygon(surface, (255, 255, 255), tail_points)
-    pygame.draw.polygon(surface, (0, 0, 0), tail_points, 3)
+        return bubble_x, bubble_y, tail_tip_x, tail_tip_y
 
-    # 텍스트 그리기 (여기서는 "현재까지 보여줄 텍스트"만 사용)
-    ty = bubble_y + padding
+    def draw(self, surface: pygame.Surface, shown_chars: float):
+        """shown_chars: 현재까지 보여줄 글자 수 (타자 효과용)"""
+        if not self.full_lines:
+            return
 
-    # render_lines 길이를 full_lines 길이에 맞게 맞춰줌 (없는 줄은 빈 문자열)
-    padded_render = list(render_lines) + [""] * (len(full_lines) - len(render_lines))
+        bubble_x, bubble_y, tail_tip_x, tail_tip_y = self._compute_geometry()
 
-    for line in padded_render[: len(full_lines)]:
-        surf = font_main.render(line, True, (0, 0, 0))
-        surface.blit(surf, (bubble_x + padding, ty))
-        ty += line_height
+        bubble_rect = pygame.Rect(bubble_x, bubble_y, self.bubble_w, self.bubble_h)
+
+        # 말풍선 몸통
+        pygame.draw.rect(surface, (255, 255, 255), bubble_rect, border_radius=14)
+        pygame.draw.rect(surface, (0, 0, 0), bubble_rect, 3, border_radius=14)
+
+        # 꼬리
+        base_y = bubble_y + self.bubble_h
+        if self.direction == "right":
+            base_x1 = bubble_x + 15
+            base_x2 = bubble_x + 45
+        else:
+            base_x1 = bubble_x + self.bubble_w - 15
+            base_x2 = bubble_x + self.bubble_w - 45
+
+        tail_points = [
+            (base_x1, base_y),
+            (base_x2, base_y),
+            (tail_tip_x, tail_tip_y),
+        ]
+
+        pygame.draw.polygon(surface, (255, 255, 255), tail_points)
+        pygame.draw.polygon(surface, (0, 0, 0), tail_points, 3)
+
+        # 텍스트 (현재까지 나온 부분만)
+        partial_text = self.text[: int(shown_chars)]
+        shown_parts = partial_text.split("\n")
+
+        # full_lines 개수에 맞게 줄 정렬
+        render_lines = []
+        for i, line in enumerate(self.full_lines):
+            if i < len(shown_parts):
+                render_lines.append(shown_parts[i])
+            else:
+                render_lines.append("")
+
+        ty = bubble_y + self.padding
+        for line in render_lines:
+            surf = font_main.render(line, True, (0, 0, 0))
+            surface.blit(surf, (bubble_x + self.padding, ty))
+            ty += self.line_height
 
 
 # ===== 오프닝 클래스 =====
@@ -128,11 +177,12 @@ class Opening:
         self.text_done = False
         self.delay = 0.0
 
-        # 캐릭터 위치
-        self.crab_x = WIDTH // 2
-        self.crab_y = HEIGHT // 2
-        self.fox_x = WIDTH // 2
-        self.fox_y = HEIGHT // 2
+        # 캐릭터 객체
+        self.crab = Character(crab_img, WIDTH // 2, HEIGHT // 2)
+        self.fox = Character(fox_img, WIDTH // 2, HEIGHT // 2)
+
+        # 말풍선 객체 (필요할 때 생성)
+        self.bubble: SpeechBubble | None = None
 
         # 1단계 시작
         self.start_phase1()
@@ -149,9 +199,9 @@ class Opening:
         self.phase = 2
         self.space_hint = True
 
-        self.crab_y = HEIGHT - crab_img.get_height() - 40
-        self.crab_target_x = WIDTH - crab_img.get_width() - 40
-        self.crab_x = WIDTH + 100
+        self.crab.y = HEIGHT - self.crab.h - 40
+        self.crab_target_x = WIDTH - self.crab.w - 40
+        self.crab.x = WIDTH + 100
         self.crab_speed = 400
 
     def start_phase3(self):
@@ -164,6 +214,9 @@ class Opening:
         self.text_done = False
         self.delay = 1.0
 
+        # 게 왼쪽 위 말풍선
+        self.bubble = SpeechBubble(self.crab, self.text_full, direction="left")
+
     def start_phase4(self):
         self.phase = 4
         self.space_hint = True
@@ -172,6 +225,13 @@ class Opening:
         self.text_shown = 0.0
         self.text_speed = 20.0
         self.text_done = False
+
+        # 같은 게 말풍선, 텍스트만 변경
+        if self.bubble is None:
+            self.bubble = SpeechBubble(self.crab, self.text_full, direction="left")
+        else:
+            self.bubble.direction = "left"
+            self.bubble.set_text(self.text_full)
 
     def start_phase5(self):
         self.phase = 5
@@ -183,24 +243,24 @@ class Opening:
 
         self.crab_move_duration = 2.0
         self.crab_move_t = 0.0
-        self.crab_start_pos = (self.crab_x, self.crab_y)
+        self.crab_start_pos = (self.crab.x, self.crab.y)
         self.crab_end_pos = (WIDTH * 0.2, HEIGHT * 0.2)
 
     def start_phase6(self):
         self.phase = 6
         self.space_hint = True
 
-        self.crab_x = 60
-        self.crab_y = HEIGHT - crab_img.get_height() - 40
+        self.crab.x = 60
+        self.crab.y = HEIGHT - self.crab.h - 40
         self.fade_alpha = 255
 
     def start_phase7(self):
         self.phase = 7
         self.space_hint = True
 
-        self.fox_y = HEIGHT - fox_img.get_height() - 40
-        self.fox_target_x = WIDTH - fox_img.get_width() - 60
-        self.fox_x = WIDTH + 120
+        self.fox.y = HEIGHT - self.fox.h - 40
+        self.fox_target_x = WIDTH - self.fox.w - 60
+        self.fox.x = WIDTH + 120
         self.fox_speed = 500
 
     def start_phase8(self):
@@ -212,6 +272,9 @@ class Opening:
         self.text_speed = 20.0
         self.text_done = False
 
+        # 여우 왼쪽 위 말풍선
+        self.bubble = SpeechBubble(self.fox, self.text_full, direction="left")
+
     def start_phase9(self):
         self.phase = 9
         self.space_hint = True
@@ -220,6 +283,9 @@ class Opening:
         self.text_shown = 0.0
         self.text_speed = 40.0
         self.text_done = False
+
+        # 게 오른쪽 위 말풍선
+        self.bubble = SpeechBubble(self.crab, self.text_full, direction="right")
 
     def start_phase10(self):
         self.phase = 10
@@ -232,7 +298,7 @@ class Opening:
             self.start_phase2()
 
         elif self.phase == 2:
-            self.crab_x = self.crab_target_x
+            self.crab.x = self.crab_target_x
             self.start_phase3()
 
         elif self.phase in (3, 4, 8, 9):
@@ -251,7 +317,7 @@ class Opening:
 
         elif self.phase == 5:
             self.dark_alpha = 255
-            self.crab_x, self.crab_y = self.crab_end_pos
+            self.crab.x, self.crab.y = self.crab_end_pos
             self.start_phase6()
 
         elif self.phase == 6:
@@ -259,7 +325,7 @@ class Opening:
             self.start_phase7()
 
         elif self.phase == 7:
-            self.fox_x = self.fox_target_x
+            self.fox.x = self.fox_target_x
             self.start_phase8()
 
         elif self.phase == 10:
@@ -277,10 +343,10 @@ class Opening:
                 self.start_phase2()
 
         elif self.phase == 2:
-            if self.crab_x > self.crab_target_x:
-                self.crab_x -= self.crab_speed * dt
-                if self.crab_x <= self.crab_target_x:
-                    self.crab_x = self.crab_target_x
+            if self.crab.x > self.crab_target_x:
+                self.crab.x -= self.crab_speed * dt
+                if self.crab.x <= self.crab_target_x:
+                    self.crab.x = self.crab_target_x
 
         elif self.phase == 3:
             if self.delay > 0:
@@ -304,8 +370,8 @@ class Opening:
             t = min(1.0, self.crab_move_t / self.crab_move_duration)
             sx, sy = self.crab_start_pos
             ex, ey = self.crab_end_pos
-            self.crab_x = sx + (ex - sx) * t
-            self.crab_y = sy + (ey - sy) * t
+            self.crab.x = sx + (ex - sx) * t
+            self.crab.y = sy + (ey - sy) * t
 
             self.dark_alpha = min(255, self.dark_alpha + 120 * dt)
             if t >= 1.0 and self.dark_alpha >= 255:
@@ -317,10 +383,10 @@ class Opening:
                 self.start_phase7()
 
         elif self.phase == 7:
-            if self.fox_x > self.fox_target_x:
-                self.fox_x -= self.fox_speed * dt
-                if self.fox_x <= self.fox_target_x:
-                    self.fox_x = self.fox_target_x
+            if self.fox.x > self.fox_target_x:
+                self.fox.x -= self.fox_speed * dt
+                if self.fox.x <= self.fox_target_x:
+                    self.fox.x = self.fox_target_x
 
         elif self.phase == 8:
             if not self.text_done:
@@ -351,67 +417,15 @@ class Opening:
 
         # 게
         if self.phase >= 2:
-            surface.blit(crab_img, (self.crab_x, self.crab_y))
+            self.crab.draw(surface)
 
         # 여우
         if self.phase >= 7:
-            surface.blit(fox_img, (self.fox_x, self.fox_y))
+            self.fox.draw(surface)
 
-        # ===== 말풍선 (텍스트 단계인 3,4,8,9에서만 – 수정됨) =====
-        if self.phase in (3, 4, 8, 9):
-            # 전체 텍스트 기준 줄 나누기 (크기 계산용)
-            full_lines = self.text_full.split("\n")
-
-            # 현재까지 보여줄 텍스트
-            shown_text = self.text_full[: int(self.text_shown)]
-            shown_parts = shown_text.split("\n")
-
-            # full_lines 개수에 맞게 줄 맞추기
-            render_lines = []
-            for i, line in enumerate(full_lines):
-                if i < len(shown_parts):
-                    render_lines.append(shown_parts[i])
-                else:
-                    render_lines.append("")
-
-            # 3,4: 게의 왼쪽 위
-            if self.phase in (3, 4):
-                draw_speech_bubble(
-                    surface,
-                    self.crab_x,
-                    self.crab_y,
-                    crab_img.get_width(),
-                    crab_img.get_height(),
-                    full_lines,
-                    render_lines,
-                    direction="left",
-                )
-
-            # 8: 여우의 왼쪽 위
-            elif self.phase == 8:
-                draw_speech_bubble(
-                    surface,
-                    self.fox_x,
-                    self.fox_y,
-                    fox_img.get_width(),
-                    fox_img.get_height(),
-                    full_lines,
-                    render_lines,
-                    direction="left",
-                )
-
-            # 9: 게의 오른쪽 위
-            elif self.phase == 9:
-                draw_speech_bubble(
-                    surface,
-                    self.crab_x,
-                    self.crab_y,
-                    crab_img.get_width(),
-                    crab_img.get_height(),
-                    full_lines,
-                    render_lines,
-                    direction="right",
-                )
+        # 말풍선 (3,4,8,9 단계에서만)
+        if self.phase in (3, 4, 8, 9) and self.bubble is not None:
+            self.bubble.draw(surface, self.text_shown)
 
         # 1단계: 원형 밝아지는 마스크
         if self.phase == 1:

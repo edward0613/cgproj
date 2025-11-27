@@ -1,0 +1,128 @@
+import pygame
+import sys
+import subprocess
+from config import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
+from screens import MenuScreen, SkillSelectScreen, GameScreen
+from skills import load_all_player_skills
+
+
+class Game:
+    """
+    메인 게임 클래스.
+    게임의 전반적인 흐름, 상태 관리, 화면 전환을 담당합니다.
+    """
+
+    def __init__(self):
+        pygame.init()
+        pygame.font.init()  # 폰트 모듈 초기화
+
+        # Pygame 2.0.0 이상에서는 pygame.FULLSCREEN | pygame.SCALED 사용 가능
+        # 여기서는 우선 FULLSCREEN 플래그만 사용합니다.
+        # try:
+        #     self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
+        # except pygame.error:
+        #     print("전체 화면 모드를 지원하지 않아, 창 모드로 실행합니다.")
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+        pygame.display.set_caption("Crab vs Fox (가제)")
+        self.clock = pygame.time.Clock()
+
+        # 모든 플레이어 스킬 로드
+        self.all_player_skills = load_all_player_skills()
+
+        # 게임 상태 및 화면 관리
+        self.game_state = 'MENU'
+        self.screens = {
+            'MENU': MenuScreen(),
+            'SKILL_SELECT': SkillSelectScreen(self.all_player_skills),
+            'IN_GAME': None  # 게임 시작 시 동적으로 생성
+        }
+        self.current_screen = self.screens['MENU']
+
+    def run(self):
+        """메인 게임 루프"""
+        while True:
+            # 1. 이벤트 처리
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    self.quit_game()
+                # 'ESC' 키로 종료 (전체화면 테스트 시 유용)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.quit_game()
+
+            # 현재 화면의 이벤트 처리 및 상태 전환 로직
+            result = self.current_screen.handle_events(events)
+            self.handle_transition(result)
+
+            # 2. 게임 로직 업데이트
+            # dt: 델타 타임 (프레임 간 시간 간격)
+            dt = self.clock.tick(FPS) / 1000.0
+            self.current_screen.update(dt)
+
+            # 3. 화면 그리기
+            self.current_screen.draw(self.screen)
+            pygame.display.flip()
+
+    def handle_transition(self, result):
+        """
+        화면으로부터 받은 결과(result)를 바탕으로 게임 상태를 전환합니다.
+        """
+        if result is None:
+            return
+
+        if result == 'EXIT':
+            self.quit_game()
+
+        elif result == 'TUTORIAL':
+            print("튜토리얼 시작 (미구현)")
+            # self.game_state = 'TUTORIAL'
+            # self.current_screen = self.screens['TUTORIAL']
+
+        elif result == 'START_GAME':
+            print("오프닝 실행...")
+            try:
+                # opening.py 실행 (같은 폴더에 있다고 가정)
+                subprocess.run([sys.executable, "opening.py"], check=True)
+            except FileNotFoundError:
+                print("'opening.py'를 찾을 수 없습니다. 오프닝을 건너뜁니다.")
+            except Exception as e:
+                print(f"오프닝 실행 중 오류 발생: {e}")
+
+            # 오프닝이 끝나면 스킬 선택 화면으로 전환
+            self.game_state = 'SKILL_SELECT'
+            self.current_screen = self.screens['SKILL_SELECT']
+
+        elif isinstance(result, tuple) and result[0] == 'GAME_START':
+            # 스킬 선택 완료. ('GAME_START', [선택한 스킬 객체 리스트])
+            selected_skills = result[1]
+            print(f"게임 시작! 선택한 스킬: {[skill.name for skill in selected_skills]}")
+
+            # 새로운 GameScreen 인스턴스 생성
+            self.screens['IN_GAME'] = GameScreen(selected_skills)
+            self.game_state = 'IN_GAME'
+            self.current_screen = self.screens['IN_GAME']
+
+        elif result == 'GAME_OVER':
+            print("게임 오버! 엔딩 실행...")
+            try:
+                # ending.py 실행
+                subprocess.run([sys.executable, "ending.py"], check=True)
+            except FileNotFoundError:
+                print("'ending.py'를 찾을 수 없습니다.")
+            except Exception as e:
+                print(f"엔딩 실행 중 오류 발생: {e}")
+
+            # 엔딩 후 게임 종료
+            self.quit_game()
+
+    def quit_game(self):
+        """게임을 종료합니다."""
+        pygame.quit()
+        sys.exit()
+
+
+if __name__ == "__main__":
+    game = Game()
+    game.run()

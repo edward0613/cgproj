@@ -289,6 +289,7 @@ class Game:
         self.pending_card_index = None
         self.pending_preview = None
         self.messages = []
+        self.fox_preview = []
 
         self.init_defaults()
 
@@ -404,7 +405,7 @@ class Game:
                             coords.append((nx,ny))
             else:
                 coords = SkillTargetRule.area_from_mouse(px,py,sk.target_w,sk.target_h)
-        self.current_target_preview = coords
+        self.fox_preview = coords
         if sk.delay > 0:
             self.schedule_delayed(lambda s=sk,c=coords: s.effect(self,c), sk.delay)
         else:
@@ -574,12 +575,16 @@ class Game:
         self.screen.blit(ptxt, (10, GRID_H*CELL_SIZE+50))
 
     def draw_preview(self):
-        for (x,y) in getattr(self, "current_target_preview", []):
+        for (x, y) in self.current_target_preview:
             r = pygame.Rect(x*CELL_SIZE, y*CELL_SIZE, CELL_SIZE, CELL_SIZE)
             s = pygame.Surface((CELL_SIZE, CELL_SIZE), pygame.SRCALPHA)
             s.fill((255,255,0,80))
             self.screen.blit(s, r.topleft)
-
+        for (x, y) in self.fox_preview:
+            r = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+            s = pygame.Surface((CELL_SIZE, CELL_SIZE), pygame.SRCALPHA)
+            s.fill((255, 255, 0, 80))
+            self.screen.blit(s, r.topleft)
     def on_player_death(self):
         self.state = "GAME_OVER"
         self.move_path = []
@@ -754,7 +759,7 @@ class Game:
                                     self.current_target_preview = new_preview["coords"]
 
                 elif self.state == "GAME_OVER":
-                    self.draw()
+
                     overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
                     overlay.fill((0, 0, 0, 160))
                     self.screen.blit(overlay, (0, 0))

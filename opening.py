@@ -1,8 +1,12 @@
+# opening.py
 import pygame
 import sys
 import math
 
-from SpeechBubble import MakeSpeechBubble
+from SpeechBubble import (
+    OpeningSpeechBubble,
+    load_hanna_fonts,
+)
 
 pygame.init()
 
@@ -13,9 +17,8 @@ pygame.display.set_caption("Crab & Fox Opening")
 
 clock = pygame.time.Clock()
 
-# ===== 폰트 =====
-font_main = pygame.font.SysFont("malgungothic", 28)
-font_small = pygame.font.SysFont("malgungothic", 20)
+# ===== 폰트 (공통: 한나체) =====
+font_main, font_small = load_hanna_fonts()
 
 # ===== 이미지 로드 =====
 sea_bg = pygame.image.load("sea.jpeg").convert()
@@ -54,30 +57,6 @@ class Character:
         surface.blit(self.image, (self.x, self.y))
 
 
-# ===== 오프닝 전용 말풍선 (MakeSpeechBubble 상속) =====
-class OpeningSpeechBubble(MakeSpeechBubble):
-    def __init__(
-        self,
-        owner: Character,
-        text: str,
-        direction: str = "right",
-        padding: int = 20,
-        line_height: int = 28,
-    ):
-        # 화면 전체를 쓰되, 별도 클램프는 하지 않음 (원래 동작 유지)
-        super().__init__(
-            owner,
-            text,
-            direction=direction,
-            padding=padding,
-            line_height=line_height,
-            font=font_main,
-            screen_width=WIDTH,
-            screen_height=HEIGHT,
-        )
-        # _compute_geometry, draw는 기본 그대로 사용 → 기존 UI와 동일
-
-
 # ===== 오프닝 클래스 =====
 class Opening:
     def __init__(self):
@@ -105,7 +84,7 @@ class Opening:
         self.crab = Character(crab_img, WIDTH // 2, HEIGHT // 2)
         self.fox = Character(fox_img, WIDTH // 2, HEIGHT // 2)
 
-        # 말풍선 객체 (필요할 때 생성)
+        # 말풍선 객체
         self.bubble: OpeningSpeechBubble | None = None
 
         # 1단계 시작
@@ -138,8 +117,13 @@ class Opening:
         self.text_done = False
         self.delay = 1.0
 
-        # 게 왼쪽 위 말풍선
-        self.bubble = OpeningSpeechBubble(self.crab, self.text_full, direction="left")
+        # 게 왼쪽 위 말풍선 (OpeningSpeechBubble 사용)
+        self.bubble = OpeningSpeechBubble(
+            owner=self.crab,
+            text=self.text_full,
+            direction="left",
+            font=font_main,
+        )
 
     def start_phase4(self):
         self.phase = 4
@@ -150,11 +134,12 @@ class Opening:
         self.text_speed = 20.0
         self.text_done = False
 
-        if self.bubble is None:
-            self.bubble = OpeningSpeechBubble(self.crab, self.text_full, direction="left")
-        else:
-            self.bubble.direction = "left"
-            self.bubble.set_text(self.text_full)
+        self.bubble = OpeningSpeechBubble(
+            owner=self.crab,
+            text=self.text_full,
+            direction="left",
+            font=font_main,
+        )
 
     def start_phase5(self):
         self.phase = 5
@@ -195,7 +180,12 @@ class Opening:
         self.text_speed = 20.0
         self.text_done = False
 
-        self.bubble = OpeningSpeechBubble(self.fox, self.text_full, direction="left")
+        self.bubble = OpeningSpeechBubble(
+            owner=self.fox,
+            text=self.text_full,
+            direction="left",
+            font=font_main,
+        )
 
     def start_phase9(self):
         self.phase = 9
@@ -206,7 +196,12 @@ class Opening:
         self.text_speed = 40.0
         self.text_done = False
 
-        self.bubble = OpeningSpeechBubble(self.crab, self.text_full, direction="right")
+        self.bubble = OpeningSpeechBubble(
+            owner=self.crab,
+            text=self.text_full,
+            direction="right",
+            font=font_main,
+        )
 
     def start_phase10(self):
         self.phase = 10
@@ -256,7 +251,7 @@ class Opening:
     def handle_skip(self):
         self.start_phase10()
 
-    # ----- 단계별 업데이트 -----
+    # ----- 업데이트 -----
     def update(self, dt):
         if self.phase == 1:
             self.radius += self.reveal_speed * dt
@@ -279,7 +274,7 @@ class Opening:
                         self.text_shown = len(self.text_full)
                         self.text_done = True
 
-        elif self.phase == 4:
+        elif self.phase in (4, 8, 9):
             if not self.text_done:
                 self.text_shown += self.text_speed * dt
                 if self.text_shown >= len(self.text_full):
@@ -309,20 +304,6 @@ class Opening:
                 if self.fox.x <= self.fox_target_x:
                     self.fox.x = self.fox_target_x
 
-        elif self.phase == 8:
-            if not self.text_done:
-                self.text_shown += self.text_speed * dt
-                if self.text_shown >= len(self.text_full):
-                    self.text_shown = len(self.text_full)
-                    self.text_done = True
-
-        elif self.phase == 9:
-            if not self.text_done:
-                self.text_shown += self.text_speed * dt
-                if self.text_shown >= len(self.text_full):
-                    self.text_shown = len(self.text_full)
-                    self.text_done = True
-
         elif self.phase == 10:
             self.fade_alpha = min(255, self.fade_alpha + 120 * dt)
             if self.fade_alpha >= 255:
@@ -330,20 +311,25 @@ class Opening:
 
     # ----- 화면 그리기 -----
     def draw(self, surface):
+        # 배경
         if self.phase in (1, 2, 3, 4, 5):
             surface.blit(sea_bg, (0, 0))
         else:
             surface.blit(shore_bg, (0, 0))
 
+        # 게
         if self.phase >= 2:
             self.crab.draw(surface)
 
+        # 여우
         if self.phase >= 7:
             self.fox.draw(surface)
 
+        # 말풍선
         if self.phase in (3, 4, 8, 9) and self.bubble is not None:
             self.bubble.draw(surface, self.text_shown)
 
+        # 1단계: 원형 밝아지는 마스크
         if self.phase == 1:
             mask = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
             mask.fill((0, 0, 0, 255))
@@ -355,19 +341,23 @@ class Opening:
             )
             surface.blit(mask, (0, 0))
 
+        # 5단계: 어두워지는 오버레이
         if self.phase == 5:
             self.dark_surface.set_alpha(int(self.dark_alpha))
             surface.blit(self.dark_surface, (0, 0))
 
+        # 6, 10단계: 페이드(검은 오버레이)
         if self.phase in (6, 10):
             self.fade_surface.set_alpha(int(self.fade_alpha))
             surface.blit(self.fade_surface, (0, 0))
 
+        # 스페이스바 안내
         if self.space_hint and self.phase != 10:
             hint = font_small.render("스페이스바를 누르세요", True, (255, 255, 255))
             hint_rect = hint.get_rect(midtop=(WIDTH // 2, 10))
             surface.blit(hint, hint_rect)
 
+        # 건너뛰기 버튼
         bg_rect = self.skip_rect.inflate(10, 6)
         pygame.draw.rect(surface, (0, 0, 0), bg_rect, border_radius=6)
         surface.blit(self.skip_text, self.skip_rect)
@@ -379,7 +369,6 @@ def main():
 
     while opening.running:
         dt = clock.tick(60) / 1000.0
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 opening.running = False

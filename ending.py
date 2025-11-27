@@ -2,44 +2,24 @@
 import pygame
 import sys
 
-import opening  # WIDTH, HEIGHT, font_main, font_small 재사용
-from SpeechBubble import MakeSpeechBubble
+import opening
+from SpeechBubble import (
+    EndingSpeechBubble,
+    BubbleOwner,
+    load_hanna_fonts,
+)
 
 pygame.init()
 
-# ===== 기본 설정 / 공용 자원 =====
+# ===== 기본 설정 =====
 WIDTH, HEIGHT = opening.WIDTH, opening.HEIGHT
-font_main = opening.font_main
-font_small = opening.font_small
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Crab & Fox Ending")
 
+clock = pygame.time.Clock()
 
-# ===== 말풍선 Owner (x,y,w,h만 필요) =====
-class BubbleOwner:
-    def __init__(self):
-        self.x = 0
-        self.y = 0
-        self.w = 0
-        self.h = 0
-
-
-# ===== 말풍선용 안전 버전 (화면 안으로 강제) =====
-class SafeSpeechBubble(MakeSpeechBubble):
-    def _compute_geometry(self):
-        # 기본 위치 계산 (부모의 로직 그대로 사용)
-        bubble_x, bubble_y, tail_tip_x, tail_tip_y = super()._compute_geometry()
-
-        # 화면 크기 정보가 있다면, 여기서 클램프
-        if self.screen_width is not None and self.screen_height is not None:
-            if bubble_x < 0:
-                bubble_x = 0
-            if bubble_x + self.bubble_w > self.screen_width:
-                bubble_x = self.screen_width - self.bubble_w
-            if bubble_y < 0:
-                bubble_y = 0
-            if bubble_y + self.bubble_h > self.screen_height:
-                bubble_y = self.screen_height - self.bubble_h
-
-        return bubble_x, bubble_y, tail_tip_x, tail_tip_y
+# ===== 폰트 (공통: 한나체) =====
+font_main, font_small = load_hanna_fonts()
 
 
 # ===== 이미지 / 리소스 관리 클래스 =====
@@ -81,10 +61,10 @@ class Ending:
         self.fox_rect.midright = (WIDTH - 120, HEIGHT // 2 + 40)
 
         # 게 초기 위치 (왼쪽, top-left 기준)
+        cw, ch = self.assets.crab_base_img.get_size()
         start_tl_x = 150
         start_tl_y = HEIGHT // 2 + 60
 
-        cw, ch = self.assets.crab_base_img.get_size()
         self.crab_center = [
             start_tl_x + cw / 2,
             start_tl_y + ch / 2,
@@ -93,10 +73,11 @@ class Ending:
         self.crab_scale = 1.0
         self.crab_visible = True
 
-        # 2단계: 이동/회전/크기변화
+        # 2단계: 이동/회전/크기변화 파라미터
         self.move_duration = 2.0
         self.move_t = 0.0
 
+        # 이전 코드와 "좌표는 그대로" 유지 (top-left 기준)
         end_tl_x = self.fox_rect.x + 120
         end_tl_y = self.fox_rect.y + 170
 
@@ -120,6 +101,7 @@ class Ending:
         self.text_shown = 0.0
         self.text_speed = 24.0
         self.text_done = False
+
         self.bubble = None
         self.crab_owner = BubbleOwner()
 
@@ -133,24 +115,28 @@ class Ending:
         self.end_fade_target = 128
         self.end_fade_speed = 200
 
+    # --- 게 이미지(회전/스케일) 얻기: 중심 기준 ---
     def get_crab_surf_and_rect(self):
         if not self.crab_visible:
             return None, None
 
         img = self.assets.crab_base_img
 
+        # 스케일
         if self.crab_scale != 1.0:
             w0, h0 = img.get_size()
             new_w = max(1, int(w0 * self.crab_scale))
             new_h = max(1, int(h0 * self.crab_scale))
             img = pygame.transform.smoothscale(img, (new_w, new_h))
 
+        # 회전
         if self.crab_angle != 0:
             img = pygame.transform.rotate(img, self.crab_angle)
 
         rect = img.get_rect(center=(self.crab_center[0], self.crab_center[1]))
         return img, rect
 
+    # --- 단계 시작 ---
     def start_phase1(self):
         self.phase = 1
         self.space_hint = True
@@ -173,13 +159,11 @@ class Ending:
         self.text_speed = 24.0
         self.text_done = False
 
-        # 화면 안에 들어오도록 SafeSpeechBubble 사용
-        self.bubble = SafeSpeechBubble(
-            self.crab_owner,
-            self.text_full,
+        # 말풍선: EndingSpeechBubble 사용 (화면 밖으로 안 나가게)
+        self.bubble = EndingSpeechBubble(
+            owner=self.crab_owner,
+            text=self.text_full,
             direction="left",
-            padding=20,
-            line_height=28,
             font=font_main,
             screen_width=WIDTH,
             screen_height=HEIGHT,
@@ -196,6 +180,7 @@ class Ending:
         self.space_hint = False
         self.end_fade_alpha = 0
 
+    # --- 스페이스 처리 ---
     def handle_space(self):
         if self.phase == 1:
             self.fade_alpha = 0
@@ -221,8 +206,10 @@ class Ending:
             self.start_phase5()
 
         elif self.phase == 5:
+            # 엔딩 상태에서 스페이스는 특별한 동작 없음
             pass
 
+    # --- 업데이트 ---
     def update(self, dt):
         if self.phase == 1:
             if self.fade_alpha > 0:
@@ -231,9 +218,11 @@ class Ending:
                     self.fade_alpha = 0
 
         elif self.phase == 2:
+            # 회전 + 크기 작아지면서(1.0 → move_end_scale) 여우 쪽으로 이동
             self.move_t += dt / self.move_duration
             if self.move_t > 1.0:
                 self.move_t = 1.0
+
             t = self.move_t
 
             cx = self.move_start_center[0] + (self.move_end_center[0] - self.move_start_center[0]) * t
@@ -248,6 +237,7 @@ class Ending:
                 self.start_phase3()
 
         elif self.phase == 3:
+            # 말풍선 텍스트 타이핑
             if not self.text_done:
                 self.text_shown += self.text_speed * dt
                 if self.text_shown >= len(self.text_full):
@@ -255,6 +245,7 @@ class Ending:
                     self.text_done = True
 
         elif self.phase == 4:
+            # 게가 중심을 기준으로 작아지면서 사라지기
             self.shrink_t += dt / self.shrink_duration
             if self.shrink_t > 1.0:
                 self.shrink_t = 1.0
@@ -266,20 +257,28 @@ class Ending:
                 self.start_phase5()
 
         elif self.phase == 5:
+            # 화면 50% 어둡게
             if self.end_fade_alpha < self.end_fade_target:
                 self.end_fade_alpha += self.end_fade_speed * dt
                 if self.end_fade_alpha > self.end_fade_target:
                     self.end_fade_alpha = self.end_fade_target
 
+    # --- 그리기 ---
     def draw(self, surface):
+        # 배경(육지)
         surface.blit(self.assets.shore_bg, (0, 0))
+
+        # 여우
         surface.blit(self.assets.fox_img, self.fox_rect)
 
+        # 게
         crab_surf, crab_rect = self.get_crab_surf_and_rect()
         if crab_surf is not None and crab_rect is not None:
             surface.blit(crab_surf, crab_rect)
 
+        # 3단계 말풍선
         if self.phase == 3 and self.bubble is not None and crab_rect is not None:
+            # 말풍선 owner를 게 이미지 rect 기준으로 업데이트
             self.crab_owner.x = crab_rect.x
             self.crab_owner.y = crab_rect.y
             self.crab_owner.w = crab_rect.width
@@ -288,12 +287,14 @@ class Ending:
             self.bubble.set_text(self.text_full)
             self.bubble.draw(surface, self.text_shown)
 
+        # 1단계: 검은 페이드
         if self.phase == 1 and self.fade_alpha > 0:
             mask = pygame.Surface((WIDTH, HEIGHT))
             mask.set_alpha(int(self.fade_alpha))
             mask.fill((0, 0, 0))
             surface.blit(mask, (0, 0))
 
+        # 5단계: 어두워지는 오버레이 + Q/R 표시
         if self.phase == 5:
             overlay = pygame.Surface((WIDTH, HEIGHT))
             overlay.set_alpha(int(self.end_fade_alpha))
@@ -304,6 +305,7 @@ class Ending:
             rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
             surface.blit(text, rect)
 
+        # 스페이스바 안내 (1~4단계)
         if self.space_hint and self.phase in (1, 2, 3, 4):
             hint = font_small.render("스페이스바를 누르세요", True, (255, 255, 255))
             hint_rect = hint.get_rect(midtop=(WIDTH // 2, 10))
@@ -313,9 +315,8 @@ class Ending:
 # ===== 앱 / 메인 루프 클래스 =====
 class EndingApp:
     def __init__(self):
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption("Crab & Fox Ending")
-        self.clock = pygame.time.Clock()
+        self.screen = screen
+        self.clock = clock
 
         self.assets = Assets(WIDTH, HEIGHT)
         self.ending = Ending(self.assets)
@@ -335,8 +336,10 @@ class EndingApp:
                     if event.key == pygame.K_SPACE:
                         self.ending.handle_space()
 
+                    # 5단계에서 Q/R 처리
                     if self.ending.phase == 5:
                         if event.key == pygame.K_q:
+                            # 오프닝으로 재시작
                             restart_to_opening = True
                             self.ending.running = False
                         elif event.key == pygame.K_r:
@@ -348,20 +351,18 @@ class EndingApp:
 
         return restart_to_opening
 
-
 # ===== 진입점 =====
 def main():
     app = EndingApp()
     restart = app.run()
 
+    # 여기서는 pygame.quit()을 먼저 하지 않고,
+    # Q를 눌렀다면 바로 opening.main()으로 넘겨버림.
     if restart:
-        # 여기서는 pygame을 끄지 않고 바로 opening으로 넘어간다
         opening.main()
     else:
-        # 완전히 종료할 때만 pygame.quit() 호출
         pygame.quit()
         sys.exit()
-
 
 if __name__ == "__main__":
     main()

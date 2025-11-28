@@ -2,12 +2,10 @@ import pygame
 from config import WHITE, BLACK, GRAY,GREEN, FONT_PATH, IMAGE_PATH,BLUE
 from utils import get_font, load_image
 
-
 class Button:
     """
     클릭 가능한 기본 버튼 클래스. 텍스트 또는 이미지를 표시할 수 있습니다.
     """
-
     def __init__(self, x, y, width, height, text=None, image_path=None, font_size=30,alpha=None):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
@@ -47,12 +45,10 @@ class Button:
             text_rect = text_surf.get_rect(center=self.rect.center)
             surface.blit(text_surf, text_rect)
 
-
 class SkillToggleButton(Button):
     """
     스킬 선택 화면용 토글 버튼 클래스. (활성화/비활성화 상태)
     """
-
     def __init__(self, x, y, width, height, skill, font_size=20,alpha=1):
         self.skill = skill
         # 이미지는 square.jpeg, 텍스트는 스킬 이름

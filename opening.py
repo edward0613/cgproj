@@ -11,7 +11,7 @@ from SpeechBubble import (
 pygame.init()
 
 # ===== 기본 설정 =====
-WIDTH, HEIGHT = 960, 540
+WIDTH, HEIGHT = 1280, 720
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Crab & Fox Opening")
 
@@ -30,12 +30,12 @@ shore_bg = pygame.transform.scale(shore_bg, (WIDTH, HEIGHT))
 # 게 이미지 (1/4 크기)
 crab_img_raw = pygame.image.load("crab1.png").convert_alpha()
 w_crab, h_crab = crab_img_raw.get_size()
-crab_img = pygame.transform.scale(crab_img_raw, (int(w_crab / 4), int(h_crab / 4)))
+crab_img = pygame.transform.scale(crab_img_raw, (int(w_crab / 3), int(h_crab / 3)))
 
 # 여우 이미지 (1/4 크기)
 fox_img_raw = pygame.image.load("fox1.png").convert_alpha()
 w_fox, h_fox = fox_img_raw.get_size()
-fox_img = pygame.transform.scale(fox_img_raw, (int(w_fox / 4), int(h_fox / 4)))
+fox_img = pygame.transform.scale(fox_img_raw, (int(w_fox / 3), int(h_fox / 3)))
 
 
 # ===== 캐릭터 클래스 =====

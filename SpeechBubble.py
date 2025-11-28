@@ -1,7 +1,7 @@
 # SpeechBubble.py
 import pygame
 import os
-
+from config import FONT_PATH
 
 # ===== 폰트 로더 (넥슨 배민 한나체 Pro 공용) =====
 def load_hanna_fonts():
@@ -11,11 +11,10 @@ def load_hanna_fonts():
     pygame.init() 이후에 호출해야 함.
     """
     base_dir = os.path.dirname(__file__)
-    font_path = os.path.join(base_dir, "fonts", "BMHANNAPro.ttf")
 
     # 필요하면 사이즈는 여기서만 바꿔주면 opening/ending 둘 다 적용됨
-    font_main = pygame.font.Font(font_path, 32)
-    font_small = pygame.font.Font(font_path, 22)
+    font_main = pygame.font.Font(FONT_PATH, 32)
+    font_small = pygame.font.Font(FONT_PATH, 22)
     return font_main, font_small
 
 

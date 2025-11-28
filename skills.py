@@ -1,12 +1,10 @@
 from utils import calculate_target_area, calculate_cross_area, calculate_plus_area
 from config import PLAYER_MOVE_TIME, PLAYER_SWIFT_MOVE_TIME
 
-
 class Skill:
     """
     모든 스킬의 기본(base) 클래스.
     """
-
     def __init__(self, name, cost, delay, description, target_type, target_size=None, owner='player'):
         self.name = name
         self.cost = cost

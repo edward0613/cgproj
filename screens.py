@@ -43,13 +43,13 @@ class MenuScreen(BaseScreen):
         center_x = SCREEN_WIDTH // 2 - button_width // 2
 
         self.start_button = Button(
-            center_x, SCREEN_HEIGHT // 2 - 100, button_width, button_height, "게임 시작"
+            center_x - 480, SCREEN_HEIGHT // 2 + 50, button_width, button_height, "게임 시작"
         )
         self.tutorial_button = Button(
-            center_x, SCREEN_HEIGHT // 2 + 20, button_width, button_height, "튜토리얼"
+            center_x - 480, SCREEN_HEIGHT // 2 + 170, button_width, button_height, "튜토리얼"
         )
         self.exit_button = Button(
-            center_x, SCREEN_HEIGHT // 2 + 140, button_width, button_height, "게임 종료"
+            center_x - 480, SCREEN_HEIGHT // 2 + 290, button_width, button_height, "게임 종료"
         )
         self.buttons = [self.start_button, self.tutorial_button, self.exit_button]
 

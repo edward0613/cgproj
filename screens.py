@@ -39,18 +39,56 @@ class MenuScreen(BaseScreen):
         self.background = pygame.transform.scale(self.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
         # 버튼 생성
-        button_width, button_height = 300, 80
+        button_width, button_height = 350, 160
         center_x = SCREEN_WIDTH // 2 - button_width // 2
 
+        button_img_path = IMAGE_PATH['MENU_BUTTON']
+
         self.start_button = Button(
-            center_x, SCREEN_HEIGHT // 2 + 200, button_width, button_height, "게임 시작"
+            center_x,
+            SCREEN_HEIGHT // 2 + 130,
+            button_width,
+            button_height,
+            text="게임 시작",
+            image_path=button_img_path,
+            font_size=36,
+            alpha=True,  # 투명 PNG면 True로 두면 좋음(네 load_image 구현에 맞춰서)
+            text_color = BLACK,
+            text_offset_y = 7,
+            press_scale=0.95,
+            hover_scale=0.95
         )
+
         self.tutorial_button = Button(
-            center_x, SCREEN_HEIGHT // 2 + 300, button_width // 2 - 10, button_height // 2, "튜토리얼"
+            center_x,
+            SCREEN_HEIGHT // 2 + 280,
+            button_width // 2 - 10,
+            button_height // 2 + 10,
+            text="튜토리얼",
+            image_path=button_img_path,
+            font_size=22,
+            alpha=True,
+            text_color=BLACK,
+            text_offset_y=5,
+            press_scale=0.95,
+            hover_scale=0.95
         )
+
         self.exit_button = Button(
-            SCREEN_WIDTH // 2 + 10, SCREEN_HEIGHT // 2 + 300, button_width // 2 - 10, button_height // 2, "게임 종료"
+            SCREEN_WIDTH // 2 + 10,
+            SCREEN_HEIGHT // 2 + 280,
+            button_width // 2 - 10,
+            button_height // 2 + 10,
+            text="게임 종료",
+            image_path=button_img_path,
+            font_size=22,
+            alpha=True,
+            text_color=BLACK,
+            text_offset_y=5,
+            press_scale=0.95,
+            hover_scale=0.95
         )
+
         self.buttons = [self.start_button, self.tutorial_button, self.exit_button]
 
     def handle_events(self, events):
@@ -172,6 +210,12 @@ class GameScreen(BaseScreen):
         super().__init__()
         self.game_manager = GameManager(selected_skills)
 
+        self.background = load_image(IMAGE_PATH['GAME_BG'])
+        self.background = pygame.transform.scale(
+            self.background,
+            (SCREEN_WIDTH, SCREEN_HEIGHT)
+        )
+
         # UI 요소 초기화
         self.notification_bar = NotificationBar(
             (SCREEN_WIDTH - SCREEN_WIDTH * 0.9) // 2,
@@ -212,7 +256,7 @@ class GameScreen(BaseScreen):
         return None
 
     def draw(self, surface):
-        surface.fill(BLACK)  # 배경
+        surface.blit(self.background, (0, 0))  # 배경
 
         # 1. 그리드 (모든 셀) 그리기
         self.game_manager.draw_grid(surface)

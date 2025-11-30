@@ -6,7 +6,7 @@ class Button:
     """
     클릭 가능한 기본 버튼 클래스. 텍스트 또는 이미지를 표시할 수 있습니다.
     """
-    def __init__(self, x, y, width, height, text=None, image_path=None, font_size=30,alpha=None):
+    def __init__(self, x, y, width, height, text=None, image_path=None, font_size=30,alpha=None, text_color=WHITE, text_offset_y=0, press_scale=1, hover_scale=1):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
         self.image = None
@@ -16,6 +16,11 @@ class Button:
 
         self.font = get_font(FONT_PATH, font_size)
         self.is_hovered = False
+        self.text_color = text_color
+        self.text_offset_y = text_offset_y
+        self.is_pressed = False
+        self.press_scale = press_scale
+        self.hover_scale = hover_scale
 
     def handle_event(self, event):
         """이벤트(주로 마우스)를 처리합니다. 클릭 시 'clicked'를 반환합니다."""
@@ -28,21 +33,33 @@ class Button:
 
     def draw(self, surface):
         """버튼을 화면에 그립니다."""
-        color = GRAY if self.is_hovered else (100, 100, 100)
+        if self.is_pressed:
+            scale = self.press_scale  # 클릭 중이면 더 작게
+        elif self.is_hovered:
+            scale = self.hover_scale  # 마우스만 올려놔도 살짝 작게
+        else:
+            scale = 1.0  # 평상시 100%
+
+            # 이 아래는 그대로: rect를 scale한 draw_rect 만들고 그 위치에 그림
+        draw_width = int(self.rect.width * scale)
+        draw_height = int(self.rect.height * scale)
+        draw_rect = pygame.Rect(0, 0, draw_width, draw_height)
+        draw_rect.center = self.rect.center
 
         if self.image:
-            surface.blit(self.image, self.rect.topleft)
-            # 호버 시 약간 밝게 처리 (옵션)
-            if self.is_hovered:
-                hover_surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
-                hover_surface.fill((255, 255, 255, 50))  # 50/255 투명도의 흰색
-                surface.blit(hover_surface, self.rect.topleft)
+            if scale != 1.0:
+                img = pygame.transform.smoothscale(self.image, (draw_width, draw_height))
+            else:
+                img = self.image
+            surface.blit(img, draw_rect.topleft)
         else:
-            pygame.draw.rect(surface, color, self.rect, border_radius=10)
+            color = (150, 150, 150) if self.is_hovered else (100, 100, 100)
+            pygame.draw.rect(surface, color, draw_rect, border_radius=10)
 
         if self.text:
-            text_surf = self.font.render(self.text, True, WHITE)
+            text_surf = self.font.render(self.text, True, self.text_color)
             text_rect = text_surf.get_rect(center=self.rect.center)
+            text_rect.centery -= self.text_offset_y
             surface.blit(text_surf, text_rect)
 
 class SkillToggleButton(Button):

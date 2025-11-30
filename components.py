@@ -6,6 +6,7 @@ from config import (
     IMAGE_PATH
 )
 from utils import load_image, get_screen_pos
+from config import IMAGE_PATH, SCREEN_WIDTH, SCREEN_HEIGHT
 
 
 class Cell:
@@ -117,7 +118,7 @@ class Player:
 
         # 플레이어 이미지
         self.image = load_image(IMAGE_PATH.get('PLAYER_SPRITE', 'crab_sprite.png'),alpha=1)
-        self.image = pygame.transform.scale(self.image, (CELL_WIDTH, CELL_HEIGHT))
+        self.image = pygame.transform.scale(self.image, (CELL_WIDTH, CELL_HEIGHT*2/3))
 
     def set_target(self, grid_x, grid_y):
         """이동 목표 지점을 설정합니다."""

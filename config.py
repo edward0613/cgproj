@@ -53,19 +53,21 @@ MAX_MONEY = 12
 MONEY_GAIN_INTERVAL = 5.0 # 돈 1원 획득 시간 (초)
 
 # 파일 경로
-FONT_PATH = "BMHANNAPro.ttf" # 기본 폰트 사용. 특별한 폰트 사용 시 "path/to/font.ttf"
+FONT_PATH = "CookieRunBold.ttf" # 기본 폰트 사용. 특별한 폰트 사용 시 "path/to/font.ttf"
 IMAGE_PATH = {
     'SHORE_BG': 'shore.png',
     'SQUARE_UI': 'square.png',
     'FOX_ICON': 'fox1.png',
     'MENU_BG': 'menuscreen.png',
-    'CELL_0': 'cell_0.bmp',
-    'CELL_1': 'cell_1.bmp',
-    'CELL_2': 'cell_2.bmp',
-    'CELL_3': 'cell_3.bmp',
-    'CELL_4': 'cell_4.bmp',
-    'CELL_5': 'cell_5.bmp',
+    'CELL_0': 'cell0.png',
+    'CELL_1': 'cell1.png',
+    'CELL_2': 'cell2.png',
+    'CELL_3': 'cell3.png',
+    'CELL_4': 'cell4.png',
+    'CELL_5': 'cell5.png',
     # ... (체력별 이미지)
-    'CELL_DEAD': 'DEATH.bmp',
-    'PLAYER_SPRITE': 'crab1.png' # 예시, 게 스프라이트
+    'CELL_DEAD': 'dead.png',
+    'PLAYER_SPRITE': 'crab1.png', # 예시, 게 스프라이트
+    'MENU_BUTTON': 'buttonimg.png',
+    'GAME_BG': 'backscreen4.png'
 }

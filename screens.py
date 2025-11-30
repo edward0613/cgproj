@@ -43,13 +43,13 @@ class MenuScreen(BaseScreen):
         center_x = SCREEN_WIDTH // 2 - button_width // 2
 
         self.start_button = Button(
-            center_x - 480, SCREEN_HEIGHT // 2 + 50, button_width, button_height, "게임 시작"
+            center_x, SCREEN_HEIGHT // 2 + 200, button_width, button_height, "게임 시작"
         )
         self.tutorial_button = Button(
-            center_x - 480, SCREEN_HEIGHT // 2 + 170, button_width, button_height, "튜토리얼"
+            center_x, SCREEN_HEIGHT // 2 + 300, button_width // 2 - 10, button_height // 2, "튜토리얼"
         )
         self.exit_button = Button(
-            center_x - 480, SCREEN_HEIGHT // 2 + 290, button_width, button_height, "게임 종료"
+            SCREEN_WIDTH // 2 + 10, SCREEN_HEIGHT // 2 + 300, button_width // 2 - 10, button_height // 2, "게임 종료"
         )
         self.buttons = [self.start_button, self.tutorial_button, self.exit_button]
 
@@ -85,7 +85,7 @@ class SkillSelectScreen(BaseScreen):
         except KeyError:
             self.background = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
             self.background.fill(GRAY)
-            print("스킬 선택 배경 'shore.jpeg'를 찾을 수 없습니다.")
+            print("스킬 선택 배경 'shore.png'를 찾을 수 없습니다.")
 
         self.skills = all_player_skills
         self.skill_buttons = []

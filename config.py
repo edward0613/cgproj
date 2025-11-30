@@ -55,7 +55,7 @@ MONEY_GAIN_INTERVAL = 5.0 # 돈 1원 획득 시간 (초)
 # 파일 경로
 FONT_PATH = "BMHANNAPro.ttf" # 기본 폰트 사용. 특별한 폰트 사용 시 "path/to/font.ttf"
 IMAGE_PATH = {
-    'SHORE_BG': 'shore.jpeg',
+    'SHORE_BG': 'shore.png',
     'SQUARE_UI': 'square.png',
     'FOX_ICON': 'fox1.png',
     'MENU_BG': 'menuscreen.png',

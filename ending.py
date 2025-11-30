@@ -26,21 +26,21 @@ font_main, font_small = load_hanna_fonts()
 class Assets:
     def __init__(self, width: int, height: int):
         # 육지 배경
-        self.shore_bg = pygame.image.load("shore2.jpeg").convert()
+        self.shore_bg = pygame.image.load("shore.png").convert()
         self.shore_bg = pygame.transform.scale(self.shore_bg, (width, height))
 
         # 게 이미지 (1/4 크기)
         crab_base_img = pygame.image.load("crab2.png").convert_alpha()
         cw, ch = crab_base_img.get_size()
         self.crab_base_img = pygame.transform.smoothscale(
-            crab_base_img, (int(cw / 4), int(ch / 4))
+            crab_base_img, (int(cw / 2), int(ch / 2))
         )
 
         # 여우 이미지 (1/2 크기)
         fox_img = pygame.image.load("fox2.png").convert_alpha()
         fw, fh = fox_img.get_size()
         self.fox_img = pygame.transform.smoothscale(
-            fox_img, (int(fw / 2), int(fh / 2))
+            fox_img, (int(fw / 1.5), int(fh / 1.5))
         )
 
 
@@ -58,12 +58,12 @@ class Ending:
 
         # 여우 위치 (오른쪽)
         self.fox_rect = self.assets.fox_img.get_rect()
-        self.fox_rect.midright = (WIDTH - 120, HEIGHT // 2 + 40)
+        self.fox_rect.midright = (WIDTH, HEIGHT // 2 + 100)
 
         # 게 초기 위치 (왼쪽, top-left 기준)
         cw, ch = self.assets.crab_base_img.get_size()
-        start_tl_x = 150
-        start_tl_y = HEIGHT // 2 + 60
+        start_tl_x = 100
+        start_tl_y = HEIGHT // 2
 
         self.crab_center = [
             start_tl_x + cw / 2,
@@ -78,11 +78,11 @@ class Ending:
         self.move_t = 0.0
 
         # 이전 코드와 "좌표는 그대로" 유지 (top-left 기준)
-        end_tl_x = self.fox_rect.x + 120
+        end_tl_x = self.fox_rect.x + 250
         end_tl_y = self.fox_rect.y + 170
 
         self.move_start_scale = 1.0
-        self.move_end_scale = 0.7
+        self.move_end_scale = 0.4
 
         self.move_start_center = (
             start_tl_x + cw * self.move_start_scale / 2,

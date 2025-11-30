@@ -71,15 +71,15 @@ class MakeSpeechBubble:
         char_w, char_h = self.owner.w, self.owner.h
 
         if self.direction == "right":
-            bubble_x = char_x + char_w
-            bubble_y = char_y - self.bubble_h - 30
-            tail_tip_x = char_x + char_w
-            tail_tip_y = char_y
+            bubble_x = char_x + char_w - 100
+            bubble_y = char_y - self.bubble_h
+            tail_tip_x = char_x + char_w - 100
+            tail_tip_y = char_y + 30
         else:  # "left"
-            bubble_x = char_x - self.bubble_w - 10
-            bubble_y = char_y - self.bubble_h - 30
-            tail_tip_x = char_x
-            tail_tip_y = char_y
+            bubble_x = char_x - self.bubble_w + 100
+            bubble_y = char_y - self.bubble_h
+            tail_tip_x = char_x + 100
+            tail_tip_y = char_y + 30
 
         return bubble_x, bubble_y, tail_tip_x, tail_tip_y
 

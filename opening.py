@@ -21,21 +21,21 @@ clock = pygame.time.Clock()
 font_main, font_small = load_hanna_fonts()
 
 # ===== 이미지 로드 =====
-sea_bg = pygame.image.load("sea.jpeg").convert()
+sea_bg = pygame.image.load("sea.png").convert()
 sea_bg = pygame.transform.scale(sea_bg, (WIDTH, HEIGHT))
 
-shore_bg = pygame.image.load("shore.jpeg").convert()
+shore_bg = pygame.image.load("shore.png").convert()
 shore_bg = pygame.transform.scale(shore_bg, (WIDTH, HEIGHT))
 
 # 게 이미지 (1/4 크기)
 crab_img_raw = pygame.image.load("crab1.png").convert_alpha()
 w_crab, h_crab = crab_img_raw.get_size()
-crab_img = pygame.transform.scale(crab_img_raw, (int(w_crab / 3), int(h_crab / 3)))
+crab_img = pygame.transform.scale(crab_img_raw, (int(w_crab / 2), int(h_crab / 2)))
 
 # 여우 이미지 (1/4 크기)
 fox_img_raw = pygame.image.load("fox1.png").convert_alpha()
 w_fox, h_fox = fox_img_raw.get_size()
-fox_img = pygame.transform.scale(fox_img_raw, (int(w_fox / 3), int(h_fox / 3)))
+fox_img = pygame.transform.scale(fox_img_raw, (int(w_fox / 1.5), int(h_fox / 1.5)))
 
 
 # ===== 캐릭터 클래스 =====
@@ -158,7 +158,7 @@ class Opening:
         self.phase = 6
         self.space_hint = True
 
-        self.crab.x = 60
+        self.crab.x = 50
         self.crab.y = HEIGHT - self.crab.h - 40
         self.fade_alpha = 255
 
@@ -167,7 +167,7 @@ class Opening:
         self.space_hint = True
 
         self.fox.y = HEIGHT - self.fox.h - 40
-        self.fox_target_x = WIDTH - self.fox.w - 60
+        self.fox_target_x = WIDTH - self.fox.w + 200
         self.fox.x = WIDTH + 120
         self.fox_speed = 500
 

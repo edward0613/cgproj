@@ -26,7 +26,6 @@ def load_image(path, use_colorkey=False, colorkey_color=None,alpha=None):
     try:
         if alpha is not None:
             image = pygame.image.load(path).convert_alpha()
-            print(2345678)
         else:
             image = pygame.image.load(path).convert()
 

@@ -55,8 +55,8 @@ class MenuScreen(BaseScreen):
             alpha=True,  # 투명 PNG면 True로 두면 좋음(네 load_image 구현에 맞춰서)
             text_color = BLACK,
             text_offset_y = 7,
-            press_scale=0.95,
-            hover_scale=0.95
+            press_scale=0.9,
+            hover_scale=1.0
         )
 
         self.tutorial_button = Button(
@@ -70,8 +70,8 @@ class MenuScreen(BaseScreen):
             alpha=True,
             text_color=BLACK,
             text_offset_y=5,
-            press_scale=0.95,
-            hover_scale=0.95
+            press_scale=0.9,
+            hover_scale=1.0
         )
 
         self.exit_button = Button(
@@ -85,15 +85,15 @@ class MenuScreen(BaseScreen):
             alpha=True,
             text_color=BLACK,
             text_offset_y=5,
-            press_scale=0.95,
-            hover_scale=0.95
+            press_scale=0.9,
+            hover_scale=1.0
         )
 
         self.buttons = [self.start_button, self.tutorial_button, self.exit_button]
 
     def handle_events(self, events):
         for event in events:
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONUP:
                 if self.start_button.handle_event(event) == 'clicked':
                     return 'START_GAME'
                 if self.tutorial_button.handle_event(event) == 'clicked':
@@ -154,34 +154,45 @@ class SkillSelectScreen(BaseScreen):
         )
 
     def handle_events(self, events):
-        hover_skill_desc = None
+        # 1) 매 프레임 hover 업데이트
+        mouse_pos = pygame.mouse.get_pos()
+
+        self.confirm_button.is_hovered = self.confirm_button.rect.collidepoint(mouse_pos)
+        for b in self.skill_buttons:
+            b.is_hovered = b.rect.collidepoint(mouse_pos)
+
+        # 2) 클릭 처리 (토글/선택)
         for event in events:
-            # 완료 버튼 처리
-            confirm_result = self.confirm_button.handle_event(event)
-            if confirm_result == 'clicked':
-                selected_skills = []
-                for button in self.skill_buttons:
-                    if button.is_active:
-                        selected_skills.append(button.skill)
-
-                if len(selected_skills) == 5:
-                    return ('GAME_START', selected_skills)
+            # 확인 버튼 클릭
+            confirm = self.confirm_button.handle_event(event)
+            if confirm == 'clicked':
+                selected = [b.skill for b in self.skill_buttons if b.is_active]
+                if len(selected) == 5:
+                    return ('GAME_START', selected)
                 else:
-                    self.notification_text = f"정확히 5개의 스킬을 선택해야 합니다. (현재 {len(selected_skills)}개)"
+                    self.notification_text = f"정확히 5개의 스킬을 선택해야 합니다. (현재 {len(selected)}개)"
 
-            # 스킬 버튼 처리
-            for button in self.skill_buttons:
-                button.handle_event(event)  # 클릭 및 호버 처리
-                if button.is_hovered:
-                    hover_skill_desc = button.skill.description
+            # 스킬 버튼 클릭 처리 (토글)
+            for b in self.skill_buttons:
+                b.handle_event(event)
 
-        # 마우스 호버 시 알림창 업데이트
-        if hover_skill_desc:
-            self.notification_text = hover_skill_desc
+        # 3) 알림창 텍스트 결정 (이벤트 필요 없음)
+        #    ★ 여기서 hover 된 스킬 찾기
+        hovered_skill = None
+        for b in self.skill_buttons:
+            if b.is_hovered:
+                hovered_skill = b.skill
+                break
+
+        if hovered_skill:
+            # 마우스가 스킬 위에 있기만 하면 설명 표시
+            self.notification_text = hovered_skill.description
+
         elif self.confirm_button.is_hovered:
             self.notification_text = "선택을 완료합니다."
+
         else:
-            # 호버 풀렸을 때 기본 텍스트 (또는 현재 선택 개수 표시)
+            # hover 없을 때 기본 메시지
             count = sum(1 for b in self.skill_buttons if b.is_active)
             if count != 5:
                 self.notification_text = f"{count} / 5 개 선택됨. 5개를 선택하세요."

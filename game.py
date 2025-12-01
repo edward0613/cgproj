@@ -1,11 +1,29 @@
 import pygame
 import sys
+import ctypes
 import subprocess
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 from screens import MenuScreen, SkillSelectScreen, GameScreen
 from skills import load_all_player_skills
+SW_RESTORE = 9
+def bring_window_to_front():
+    try:
+        hwnd = pygame.display.get_wm_info()["window"]
 
+        # 1) 다른 프로세스 포그라운드 허용
+        ctypes.windll.user32.AllowSetForegroundWindow(-1)
 
+        # 2) 창을 정상 상태로 복구
+        ctypes.windll.user32.ShowWindow(hwnd, SW_RESTORE)
+
+        # 3) 창을 맨 앞으로
+        ctypes.windll.user32.SetForegroundWindow(hwnd)
+
+        # 4) 포커스 강제 (때때로 필요)
+        ctypes.windll.user32.SetFocus(hwnd)
+
+    except Exception as e:
+        print("bring_window_to_front 실패:", e)
 class Game:
     """
     메인 게임 클래스.
@@ -104,7 +122,7 @@ class Game:
 
                 pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-
+                bring_window_to_front()
             except FileNotFoundError:
 
                 print("'opening.py'를 찾을 수 없습니다. 오프닝 건너뜀.")
@@ -169,7 +187,7 @@ class Game:
                 # 🔥 ending.py 종료 후 게임 창 복원
 
                 pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-
+                bring_window_to_front()
                 # 🔥 결과에 따라 재시작/종료 처리
 
                 if proc.returncode == 1:

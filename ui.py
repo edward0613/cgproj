@@ -26,9 +26,16 @@ class Button:
         """이벤트(주로 마우스)를 처리합니다. 클릭 시 'clicked'를 반환합니다."""
         if event.type == pygame.MOUSEMOTION:
             self.is_hovered = self.rect.collidepoint(event.pos)
+            self.is_pressed = False
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1 and self.is_hovered:
+                self.is_pressed = False
+                return 'clicked'
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1 and self.is_hovered:
-                return 'clicked'
+                self.is_pressed = True
+                return 'clicking'
+
         return None
 
     def draw(self, surface):

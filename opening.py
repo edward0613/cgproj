@@ -384,7 +384,7 @@ def main():
         pygame.display.flip()
 
     pygame.quit()
-    sys.exit()
+    return
 
 
 if __name__ == "__main__":

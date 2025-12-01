@@ -24,7 +24,7 @@ class Game:
         #     print("전체 화면 모드를 지원하지 않아, 창 모드로 실행합니다.")
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-        pygame.display.set_caption("Crab vs Fox (가제)")
+        pygame.display.set_caption("갯벌에서 살아남기")
         self.clock = pygame.time.Clock()
 
         # 모든 플레이어 스킬 로드
@@ -40,28 +40,24 @@ class Game:
         self.current_screen = self.screens['MENU']
 
     def run(self):
-        """메인 게임 루프"""
         while True:
-            # 1. 이벤트 처리
             events = pygame.event.get()
             for event in events:
                 if event.type == pygame.QUIT:
                     self.quit_game()
-                # 'ESC' 키로 종료 (전체화면 테스트 시 유용)
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.quit_game()
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    self.quit_game()
 
-            # 현재 화면의 이벤트 처리 및 상태 전환 로직
+            # 이벤트 처리 결과
             result = self.current_screen.handle_events(events)
             self.handle_transition(result)
 
-            # 2. 게임 로직 업데이트
-            # dt: 델타 타임 (프레임 간 시간 간격)
+            # 업데이트 결과도 transition으로 넘기기!!! ← 중요
             dt = self.clock.tick(FPS) / 1000.0
-            self.current_screen.update(dt)
+            update_result = self.current_screen.update(dt)
+            self.handle_transition(update_result)
 
-            # 3. 화면 그리기
+            # 화면 그리기
             self.current_screen.draw(self.screen)
             pygame.display.flip()
 
@@ -80,19 +76,37 @@ class Game:
             # self.game_state = 'TUTORIAL'
             # self.current_screen = self.screens['TUTORIAL']
 
-        elif result == 'START_GAME':
-            print("오프닝 실행...")
-            try:
-                # opening.py 실행 (같은 폴더에 있다고 가정)
-                subprocess.run([sys.executable, "opening.py"], check=True)
-            except FileNotFoundError:
-                print("'opening.py'를 찾을 수 없습니다. 오프닝을 건너뜁니다.")
-            except Exception as e:
-                print(f"오프닝 실행 중 오류 발생: {e}")
 
-            # 오프닝이 끝나면 스킬 선택 화면으로 전환
+
+        elif result == 'START_GAME':
+
+            print("오프닝 실행...")
+
+            try:
+
+                # pygame 종료하지 않고 서브프로세스로 실행
+
+                subprocess.run([sys.executable, "opening.py"], check=True)
+
+            except FileNotFoundError:
+
+                print("'opening.py'를 찾을 수 없습니다. 오프닝 건너뜀.")
+
+            except Exception as e:
+
+                print(f"오프닝 실행 중 오류: {e}")
+
+            # 오프닝 끝나면 스킬 선택 화면으로 전환
+
             self.game_state = 'SKILL_SELECT'
+
+            # screens['SKILL_SELECT']를 새로 생성
+
+            self.screens['SKILL_SELECT'] = SkillSelectScreen(self.all_player_skills)
+
             self.current_screen = self.screens['SKILL_SELECT']
+
+
 
         elif isinstance(result, tuple) and result[0] == 'GAME_START':
             # 스킬 선택 완료. ('GAME_START', [선택한 스킬 객체 리스트])

@@ -448,6 +448,7 @@ class GameManager:
         if self.player.hp <= 0:
             return 'GAME_OVER'
 
+
         # 2. 돈 획득
         self.money_timer += dt
         if self.money_timer >= MONEY_GAIN_INTERVAL:
@@ -462,6 +463,9 @@ class GameManager:
                 if effect['on_expire']:
                     effect['on_expire']()  # 만료 함수 실행
                 self.timed_effects.remove(effect)
+                # 만료 함수에서 플레이어가 죽었을 가능성 고려
+                if self.player.hp <= 0:
+                    return 'GAME_OVER'
 
         # 4. 여우 AI 업데이트
         self.update_fox_ai(dt)
@@ -476,6 +480,14 @@ class GameManager:
                 skill.activate(self, target_cells, self.player)
                 self.notification_text = f"[여우] {skill.name} 발동!"
                 self.active_fox_attacks.remove(attack)
+
+                # 스킬 발동으로 플레이어가 죽었는지 즉시 검사
+                if self.player.hp <= 0:
+                    return 'GAME_OVER'
+
+        # (안전장치) 프레임 마지막에 한 번 더 검사
+        if self.player.hp <= 0:
+            return 'GAME_OVER'
 
         return None
 

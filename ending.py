@@ -1,4 +1,6 @@
 # ending.py
+import subprocess
+
 import pygame
 import sys
 
@@ -356,13 +358,17 @@ def main():
     app = EndingApp()
     restart = app.run()
 
-    # 여기서는 pygame.quit()을 먼저 하지 않고,
-    # Q를 눌렀다면 바로 opening.main()으로 넘겨버림.
+    # Q → 완전 종료 후 opening.py 새 프로세스로 실행
     if restart:
-        opening.main()
+        pygame.quit()
+        # ending.py 종료 후 opening.py 새로 실행
+        subprocess.run([sys.executable, "opening.py"])
+        sys.exit()
+
     else:
         pygame.quit()
         sys.exit()
+
 
 if __name__ == "__main__":
     main()

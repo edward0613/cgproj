@@ -358,17 +358,17 @@ def main():
     app = EndingApp()
     restart = app.run()
 
-    # Q → 완전 종료 후 opening.py 새 프로세스로 실행
-    if restart:
-        pygame.quit()
-        # ending.py 종료 후 opening.py 새로 실행
-        subprocess.run([sys.executable, "opening.py"])
-        sys.exit()
+    pygame.quit()
 
+    # 여기서는 프로세스 종료 코드만 돌려준다.
+    # Q(재시작) → 1, R(종료) → 0
+    if restart:
+        return 1
     else:
-        pygame.quit()
-        sys.exit()
+        return 0
 
 
 if __name__ == "__main__":
-    main()
+    code = main()
+    sys.exit(code)
+

@@ -121,15 +121,32 @@ class Game:
         elif result == 'GAME_OVER':
             print("게임 오버! 엔딩 실행...")
             try:
-                # ending.py 실행
-                subprocess.run([sys.executable, "ending.py"], check=True)
+                # check=True 제거! (returncode로 분기할 거라서)
+                proc = subprocess.run([sys.executable, "ending.py"])
+
+                # ending.py에서 Q → returncode 1, R 또는 그냥 닫기 → 0
+                if proc.returncode == 1:
+                    print("엔딩에서 Q 입력 → 게임 재시작")
+
+                    # 게임 상태 초기화 후 메뉴로 돌아가기
+                    self.game_state = 'MENU'
+                    self.screens = {
+                        'MENU': MenuScreen(),
+                        'SKILL_SELECT': SkillSelectScreen(self.all_player_skills),
+                        'IN_GAME': None
+                    }
+                    self.current_screen = self.screens['MENU']
+
+                else:
+                    print("엔딩에서 종료 선택 → 게임 완전 종료")
+                    self.quit_game()
+
             except FileNotFoundError:
                 print("'ending.py'를 찾을 수 없습니다.")
+                self.quit_game()
             except Exception as e:
                 print(f"엔딩 실행 중 오류 발생: {e}")
-
-            # 엔딩 후 게임 종료
-            self.quit_game()
+                self.quit_game()
 
     def quit_game(self):
         """게임을 종료합니다."""

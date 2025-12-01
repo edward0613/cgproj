@@ -175,14 +175,11 @@ class SkillHandUI:
             surface.blit(self.skill_image, rect.topleft)
 
             # 1. 스킬 이름
-            name_surf = self.font.render(skill.name, True, WHITE)
-            name_rect = name_surf.get_rect(centerx=rect.centerx, top=rect.top + 10)
+            name_surf = self.font.render(f"{skill.name} Cost: {skill.cost}", True, WHITE)
+            name_rect = name_surf.get_rect(centerx=rect.centerx, top=rect.top + 25)
             surface.blit(name_surf, name_rect)
 
-            # 2. 스킬 코스트
-            cost_surf = self.font.render(f"Cost: {skill.cost}", True, WHITE)
-            cost_rect = cost_surf.get_rect(centerx=rect.centerx, bottom=rect.bottom - 10)
-            surface.blit(cost_surf, cost_rect)
+
 
             # 3. 키 라벨 (Q, W, E, R)
             key_font = get_font(FONT_PATH, 24)

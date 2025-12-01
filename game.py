@@ -58,14 +58,31 @@ class Game:
         self.current_screen = self.screens['MENU']
         self.opening_proc = None
 
+    def return_to_menu(self):
+        if self.game_state == 'MENU':
+            self.quit_game()
+            return
+        """ESC 등을 눌렀을 때 메뉴 화면으로 되돌아가는 함수"""
+        print("ESC → 메뉴 화면으로 이동")
+
+        self.game_state = 'MENU'
+        self.screens = {
+            'MENU': MenuScreen(),
+            'SKILL_SELECT': SkillSelectScreen(self.all_player_skills),
+            'IN_GAME': None
+        }
+        self.current_screen = self.screens['MENU']
+
     def run(self):
         while True:
             events = pygame.event.get()
             for event in events:
                 if event.type == pygame.QUIT:
                     self.quit_game()
+
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    self.quit_game()
+                    # 🔥 전체 종료 대신 메뉴로 돌아가기
+                    self.return_to_menu()
 
             # 이벤트 처리 결과
             result = self.current_screen.handle_events(events)

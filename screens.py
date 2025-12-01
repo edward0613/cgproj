@@ -55,8 +55,8 @@ class MenuScreen(BaseScreen):
             alpha=True,  # 투명 PNG면 True로 두면 좋음(네 load_image 구현에 맞춰서)
             text_color = BLACK,
             text_offset_y = 7,
-            press_scale=0.9,
-            hover_scale=1.0
+            press_scale=0.93,
+            hover_scale=0.97
         )
 
         self.tutorial_button = Button(
@@ -70,8 +70,8 @@ class MenuScreen(BaseScreen):
             alpha=True,
             text_color=BLACK,
             text_offset_y=5,
-            press_scale=0.9,
-            hover_scale=1.0
+            press_scale=0.93,
+            hover_scale=0.97
         )
 
         self.exit_button = Button(
@@ -85,8 +85,8 @@ class MenuScreen(BaseScreen):
             alpha=True,
             text_color=BLACK,
             text_offset_y=5,
-            press_scale=0.9,
-            hover_scale=1.0
+            press_scale=0.93,
+            hover_scale=0.97
         )
 
         self.buttons = [self.start_button, self.tutorial_button, self.exit_button]
@@ -255,15 +255,47 @@ class GameScreen(BaseScreen):
         # 반투명 하이라이트를 위한 Surface
         self.highlight_surface = pygame.Surface((CELL_WIDTH, CELL_HEIGHT), pygame.SRCALPHA)
 
+        self.is_fading_out = False
+        self.fade_alpha = 0  # 0(완전 투명) ~ 255(완전 검정)
+        self.fade_speed = 300
+
+        self.fade_hold_duration = 1.5  # 1.5초 정도 유지 (원하면 2.0, 3.0으로 늘려도 됨)
+        self.fade_hold_timer = 0.0
+
     def handle_events(self, events):
         for event in events:
             self.game_manager.handle_event(event)
         return None
 
     def update(self, dt):
+        # 이미 페이드 중이면, 검게 만들기만 진행
+        if self.is_fading_out:
+            # 아직 완전히 까매지지 않았으면 alpha 올리기
+            if self.fade_alpha < 255:
+                self.fade_alpha += self.fade_speed * dt
+                if self.fade_alpha >= 255:
+                    self.fade_alpha = 255
+            else:
+                # 이미 완전 검정이면, 유지 시간 카운트
+                self.fade_hold_timer += dt
+                if self.fade_hold_timer >= self.fade_hold_duration:
+                    # 충분히 기다렸으면 이제 진짜 GAME_OVER
+                    return 'GAME_OVER'
+
+            return None
+
+        # 평소처럼 게임 로직 업데이트
         result = self.game_manager.update(dt)
+
+        # GameManager가 GAME_OVER 신호를 주면,
+        # 바로 넘기지 말고 여기서 페이드아웃 시작
         if result == 'GAME_OVER':
-            return 'GAME_OVER'
+            print("플레이어 사망 감지 → 페이드아웃 시작")
+            self.is_fading_out = True
+            self.fade_alpha = 0
+            # 아직 GAME_OVER 리턴하지 않음
+            return None
+
         return None
 
     def draw(self, surface):
@@ -289,6 +321,12 @@ class GameScreen(BaseScreen):
         )
         self.money_gauge.draw(surface, self.game_manager.money)
         self.skill_hand_ui.draw(surface, self.game_manager.skill_hand)
+
+        if self.is_fading_out:
+            fade_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+            fade_surface.fill((0, 0, 0))
+            fade_surface.set_alpha(int(self.fade_alpha))
+            surface.blit(fade_surface, (0, 0))
 
     def draw_player_highlight(self, surface):
         """플레이어가 선택 중인 스킬 범위를 그립니다."""

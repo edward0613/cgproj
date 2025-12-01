@@ -3,7 +3,7 @@ import random
 from config import (
     CELL_WIDTH, CELL_HEIGHT, GRID_WIDTH, GRID_HEIGHT,
     PLAYER_START_HP, PLAYER_MOVE_TIME, PLAYER_SWIFT_MOVE_TIME, PLAYER_INVINCIBLE_TIME,
-    IMAGE_PATH
+    IMAGE_PATH, FONT_PATH
 )
 from utils import load_image, get_screen_pos
 from config import IMAGE_PATH, SCREEN_WIDTH, SCREEN_HEIGHT
@@ -115,10 +115,16 @@ class Player:
         self.invincible_timer = 0.0
 
         self.can_move = True  # '명상' 스킬용
+        self.is_dead = False
 
         # 플레이어 이미지
         self.image = load_image(IMAGE_PATH.get('PLAYER_SPRITE', 'crab_sprite.png'),alpha=1)
         self.image = pygame.transform.scale(self.image, (CELL_WIDTH, CELL_HEIGHT*2/3))
+
+        self.start_ticks = pygame.time.get_ticks()
+
+        self.font_time = pygame.font.Font(FONT_PATH, 60)  # 경과 시간
+        self.font_hp = pygame.font.Font(FONT_PATH, 40)
 
     def set_target(self, grid_x, grid_y):
         """이동 목표 지점을 설정합니다."""
@@ -199,7 +205,9 @@ class Player:
             self.teleport_randomly(grid)
         else:
             # 게임 오버 로직은 GameScreen에서 처리
-            pass
+            self.is_dead = True
+            self.can_move = False
+            self.is_moving = False
 
     def teleport_randomly(self, grid):
         """체력이 1 이상인 임의의 칸으로 순간이동합니다."""
@@ -251,3 +259,25 @@ class Player:
             surface.blit(alpha_image, (screen_x, screen_y))
         else:
             surface.blit(self.image, (screen_x, screen_y))
+
+        # 1) 지난 시간 계산 (초 단위)
+        elapsed_ms = pygame.time.get_ticks() - self.start_ticks
+        elapsed_sec = elapsed_ms // 1000
+        minutes, seconds = divmod(elapsed_sec, 60)
+        time_str = f"{minutes:02d}:{seconds:02d}"  # "00:00" 형식
+
+        # 2) 텍스트 문자열
+        time_text = f"{time_str}"
+        hp_text = f"게 체력: {self.hp}"
+
+        # 3) 렌더
+        time_surf = self.font_time.render(time_text, True, (255, 255, 255))
+        hp_surf = self.font_hp.render(hp_text, True, (255, 255, 255))
+
+        # 4) 위치 (왼쪽 상단, 격자 왼쪽이라고 생각하고 여백만 주기)
+        #    필요하면 숫자 조금씩 바꿔서 딱 원하는 위치로 조정하면 됨
+        time_pos = (25, 90)
+        hp_pos = (25, 20 + time_surf.get_height() + 70)
+
+        surface.blit(time_surf, time_pos)
+        surface.blit(hp_surf, hp_pos)

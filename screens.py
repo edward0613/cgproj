@@ -588,3 +588,26 @@ class GameManager:
         for x in range(GRID_WIDTH):
             for y in range(GRID_HEIGHT):
                 self.grid[x][y].draw(surface)
+
+class TutorialScreen(BaseScreen):
+    def __init__(self):
+        super().__init__()
+
+        self.images = []
+        for key in ['TUTORIAL_1', 'TUTORIAL_2', 'TUTORIAL_3', 'TUTORIAL_4', 'TUTORIAL_5']:
+            img = load_image(IMAGE_PATH[key])
+            img = pygame.transform.scale(img, (SCREEN_WIDTH, SCREEN_HEIGHT))
+            self.images.append(img)
+
+        self.index = 0
+
+    def handle_events(self, events):
+        for event in events:
+            if event.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONUP):
+                self.index += 1
+                if self.index >= len(self.images):
+                    return "BACK_TO_MENU"
+        return None
+
+    def draw(self, surface):
+        surface.blit(self.images[self.index], (0, 0))

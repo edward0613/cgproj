@@ -106,12 +106,14 @@ class Game:
             self.quit_game()
 
         elif result == 'TUTORIAL':
-            print("튜토리얼 시작 (미구현)")
-            # self.game_state = 'TUTORIAL'
-            # self.current_screen = self.screens['TUTORIAL']
 
+            print("튜토리얼 시작")
 
+            from screens import TutorialScreen  # screens.py 안에 넣었다면 필요
 
+            self.game_state = 'TUTORIAL'
+
+            self.current_screen = TutorialScreen()
 
         elif result == 'START_GAME':
 
@@ -194,8 +196,11 @@ class Game:
                 print(f"엔딩 실행 중 오류 발생: {e}")
 
                 self.quit_game()
+        elif result == 'BACK_TO_MENU':
+            print("튜토리얼 종료 → 메뉴로 돌아감")
+            self.return_to_menu()
 
-    def quit_game(self):#종료ㅜ
+    def quit_game(self):#종료
         """게임을 종료합니다."""
         pygame.quit()
         sys.exit()

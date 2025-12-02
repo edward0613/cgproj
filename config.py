@@ -70,7 +70,12 @@ IMAGE_PATH = {
     'PLAYER_SPRITE': 'crab1.png',
     'MENU_BUTTON': 'buttonimg.png',
     'GAME_BG': 'backscreen.png',
-    'CRAB': 'crab.png'
+    'CRAB': 'crab.png',
+    'TUTORIAL_1': 'tutorial1.png',
+    'TUTORIAL_2': 'tutorial2.png',
+    'TUTORIAL_3': 'tutorial3.png',
+    'TUTORIAL_4': 'tutorial4.png',
+    'TUTORIAL_5': 'tutorial5.png'
 }
 SOUND_PATH = {
     "GAME_BGM": "Crab and Fox Chase.mp3"

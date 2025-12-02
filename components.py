@@ -97,7 +97,7 @@ class Player:
         self.grid_y = start_grid_y
 
         self.target_x = start_grid_x
-        self.target_y = start_grid_y
+        self.target_y = start_grid_y+1
 
         self.is_moving = False
         self.move_timer = 0.0
@@ -149,7 +149,7 @@ class Player:
                 self.move_one_step()
 
                 # 이동 후 현재 칸 상태 체크
-                self.check_current_cell(grid)
+        self.check_current_cell(grid)
 
     def move_one_step(self):
         """목표를 향해 1칸 이동합니다 (X축 먼저, 그 다음 Y축)."""

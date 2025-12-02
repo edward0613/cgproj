@@ -553,13 +553,18 @@ class GameManager:
         self.fox_ai_timer -= dt
         if self.fox_ai_timer <= 0:
             # 5~10초 사이 랜덤 쿨타임
-            self.fox_ai_timer = random.uniform(1.0, 3.0)
+            self.fox_ai_timer = random.uniform(0.7, 1.0)
 
             # 랜덤 스킬 선택
             skill_to_use = random.choice(self.fox_skills)
 
             # 랜덤 타겟 위치 (플레이어 근처 또는 랜덤)
-            target_pos = (random.randint(0, GRID_WIDTH - 1), random.randint(0, GRID_HEIGHT - 1))
+            k=random.randint(1, 8)
+            if k==1:
+                target_pos = (self.player.grid_x, self.player.grid_y)
+            else:
+                target_pos = (random.randint(0, GRID_WIDTH - 1), random.randint(0, GRID_HEIGHT - 1))
+
 
             target_area_pos = skill_to_use.get_target_area(target_pos, player=self.player)
 

@@ -243,7 +243,7 @@ class Fox_SuperThorn(Skill):
     """
     def __init__(self):
         super().__init__(
-            name="가시", cost=2, delay=1.0,
+            name="강한가시", cost=2, delay=1.0,
             description="2x2 영역에 체력이 0 이하인 칸을 죽인다",
             target_type='area', target_size=(2, 2), owner='fox'
         )
@@ -446,6 +446,7 @@ def load_all_fox_skills():
     """여우가 사용할 수 있는 모든 스킬 리스트를 반환합니다."""
     return [
         Fox_Thorn(),
+        Fox_SuperThorn(),
         Fox_Arrow(),
         Fox_Peek(),
         Fox_FocusHit(),

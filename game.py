@@ -199,7 +199,6 @@ class Game:
         elif result == 'BACK_TO_MENU':
             print("튜토리얼 종료 → 메뉴로 돌아감")
             self.return_to_menu()
-
     def quit_game(self):#종료
         """게임을 종료합니다."""
         pygame.quit()

@@ -60,8 +60,8 @@ class Player_Construction(Skill):
     def __init__(self):
         super().__init__(
             name="건축", cost=3, delay=0.5,
-            description="3x3 영역의 칸 체력을 1 더합니다.",
-            target_type='area', target_size=(3, 3)
+            description="4x3 영역의 칸 체력을 1 더합니다.",
+            target_type='area', target_size=(4, 3)
         )
 
     def activate(self, game_manager, target_cells, player):
@@ -220,19 +220,19 @@ class Player_Breakwater(Skill):
 
 class Fox_Thorn(Skill):
     """
-    가시 : 2x2 영역에 체력이 1 이하인 칸은 바로 죽이고,
+    가시 : 2x2 영역에 체력이 0인 칸은 바로 죽이고,
            나머지 칸은 체력 1 감소
     """
     def __init__(self):
         super().__init__(
-            name="가시", cost=4, delay=1.0,
-            description="2x2 영역에 체력이 1 이하인 칸은 죽이고, 나머지는 체력 1 감소시킵니다.",
+            name="가시", cost=2, delay=1.0,
+            description="2x2 영역에 체력이 0 이하인 칸은 죽이고, 나머지는 체력 1 감소시킵니다.",
             target_type='area', target_size=(2, 2), owner='fox'
         )
 
     def activate(self, game_manager, target_cells, player):
         for cell in target_cells:
-            if cell.hp <= 1:
+            if cell.hp == 0:
                 cell.kill_cell()
             else:
                 cell.update_hp(-1)
@@ -341,14 +341,14 @@ class Fox_FocusHit(Skill):
         if center_cell is not None:
             if center_cell.hp == 0:
                 center_cell.kill_cell()
-            center_cell.update_hp(-2)
+            else:center_cell.update_hp(-2)
 
 
         # 나머지 칸: 체력 1 감소, 0이면 죽은 칸 처리
         for cell in other_cells:
-            if center_cell.hp == 0:
-                center_cell.kill_cell()
-            cell.update_hp(-1)
+            if cell.hp == 0:
+                cell.kill_cell()
+            else:cell.update_hp(-1)
 
         # 플레이어가 범위 안에 있으면 피해 1
         if (player.grid_x, player.grid_y) in pos_to_cell:
@@ -368,12 +368,11 @@ class Fox_DirectLight(Skill):
 
     def activate(self, game_manager, target_cells, player):
         for cell in target_cells:
-            cell.update_hp(-1)
             if cell.hp == 0:
                 cell.kill_cell()
+            else:cell.update_hp(-1)
 
-        if (player.grid_x, player.grid_y) in [(c.grid_x, c.grid_y) for c in target_cells]:
-            player.take_damage(1, game_manager.grid)
+
 
 
 class Fox_Cross(Skill):
@@ -400,7 +399,7 @@ class Fox_Sandstorm(Skill):
     def __init__(self):
         super().__init__(
             name="모래폭풍", cost=5, delay=1.0,
-            description="4x4 영역의 칸 체력을 1 감소시키고, 0이 되면 죽입니다. 게가 맞으면 체력 1 감소.",
+            description="4x4 영역의 칸 체력을 1 감소시키고, 0이 되면 죽입니다.",
             target_type='area', target_size=(4, 4), owner='fox'
         )
 
@@ -410,8 +409,6 @@ class Fox_Sandstorm(Skill):
             if cell.hp == 0:
                 cell.kill_cell()
 
-        if (player.grid_x, player.grid_y) in [(c.grid_x, c.grid_y) for c in target_cells]:
-            player.take_damage(1, game_manager.grid)
 
 
 # --- 스킬 로드 함수 ---

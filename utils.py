@@ -109,7 +109,7 @@ def calculate_target_area(center_grid_pos, size_x, size_y):
         start_y, end_y = cy - offset_y, cy + offset_y
 
     # 2. 홀수 x 짝수 (e.g., 3x2)
-    elif size_x % 2 != 0 and size_y % 2 != 0:
+    elif size_x % 2 != 0 and size_y % 2 == 0:
         offset_x = (size_x - 1) // 2
         offset_y_top = size_y // 2  # 위로 한 칸 더
         offset_y_bottom = (size_y // 2) - 1

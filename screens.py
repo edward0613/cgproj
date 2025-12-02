@@ -554,7 +554,7 @@ class GameManager:
         self.fox_ai_timer -= dt
         if self.fox_ai_timer <= 0:
             # 5~10초 사이 랜덤 쿨타임
-            self.fox_ai_timer = random.uniform(5.0, 10.0)
+            self.fox_ai_timer = random.uniform(2.0, 5.0)
 
             # 랜덤 스킬 선택
             skill_to_use = random.choice(self.fox_skills)

@@ -27,13 +27,13 @@ class Cell:
 
         # 셀 이미지 로드
         self.cell_images = {
-            'dead': pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_DEAD')), (CELL_WIDTH, CELL_HEIGHT)),
-            0: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_0')), (CELL_WIDTH, CELL_HEIGHT)),
-            1: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_1')), (CELL_WIDTH, CELL_HEIGHT)),
-            2: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_2')), (CELL_WIDTH, CELL_HEIGHT)),
-            3: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_3')), (CELL_WIDTH, CELL_HEIGHT)),
-            4: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_4')), (CELL_WIDTH, CELL_HEIGHT)),
-            5: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_5')), (CELL_WIDTH, CELL_HEIGHT)),
+            'dead': pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_DEAD'),alpha=True), (CELL_WIDTH, CELL_HEIGHT)),
+            0: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_0'),alpha=True), (CELL_WIDTH, CELL_HEIGHT)),
+            1: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_1'),alpha=True), (CELL_WIDTH, CELL_HEIGHT)),
+            2: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_2'),alpha=True), (CELL_WIDTH, CELL_HEIGHT)),
+            3: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_3'),alpha=True), (CELL_WIDTH, CELL_HEIGHT)),
+            4: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_4'),alpha=True), (CELL_WIDTH, CELL_HEIGHT)),
+            5: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_5'),alpha=True), (CELL_WIDTH, CELL_HEIGHT)),
             # ... (더 많은 체력 이미지 추가 가능)
         }
         self.image = self.get_current_image()
@@ -116,10 +116,12 @@ class Player:
 
         self.can_move = True  # '명상' 스킬용
         self.is_dead = False
+        self.width=CELL_WIDTH+20
+        self.height=(((CELL_HEIGHT+20)*5)//7)
 
         # 플레이어 이미지
         self.image = load_image(IMAGE_PATH.get('PLAYER_SPRITE', 'crab_sprite.png'),alpha=1)
-        self.image = pygame.transform.scale(self.image, (CELL_WIDTH, CELL_HEIGHT*2/3))
+        self.image = pygame.transform.scale(self.image, (self.width, self.height))
 
         self.start_ticks = pygame.time.get_ticks()
 
@@ -249,8 +251,7 @@ class Player:
 
     def draw(self, surface):
         """플레이어를 그립니다."""
-        screen_x, screen_y = get_screen_pos(self.grid_x, self.grid_y)
-
+        screen_x, screen_y = get_screen_pos(self.grid_x, self.grid_y)[0]-(self.width//2)+CELL_WIDTH//2,get_screen_pos(self.grid_x, self.grid_y)[1]-(self.height//2)+CELL_HEIGHT//2
         if self.is_invincible:
             # 무적 상태일 때 반짝임 (간단하게 투명도 조절)
             alpha_image = self.image.copy()

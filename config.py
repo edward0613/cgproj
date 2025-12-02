@@ -67,7 +67,8 @@ IMAGE_PATH = {
     'CELL_5': 'cell5.png',
     # ... (체력별 이미지)
     'CELL_DEAD': 'dead.png',
-    'PLAYER_SPRITE': 'crab1.png', # 예시, 게 스프라이트
+    'PLAYER_SPRITE': 'crab1.png',
     'MENU_BUTTON': 'buttonimg.png',
-    'GAME_BG': 'backscreen4.png'
+    'GAME_BG': 'backscreen4.png',
+    'CRAB': 'crab.png'
 }

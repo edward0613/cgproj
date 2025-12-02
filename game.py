@@ -82,6 +82,7 @@ class Game:
 
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     # 🔥 전체 종료 대신 메뉴로 돌아가기
+                    pygame.mixer.music.stop()
                     self.return_to_menu()
 
             # 이벤트 처리 결과

@@ -298,6 +298,7 @@ class GameScreen(BaseScreen):
         # 바로 넘기지 말고 여기서 페이드아웃 시작
         if result == 'GAME_OVER':
             print("플레이어 사망 감지 → 페이드아웃 시작")
+            pygame.mixer.music.stop()
             self.is_fading_out = True
             self.fade_alpha = 0
             # 아직 GAME_OVER 리턴하지 않음

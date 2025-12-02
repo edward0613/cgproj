@@ -136,18 +136,26 @@ class SkillSelectScreen(BaseScreen):
         self.notification_text = "5개의 스킬을 선택하세요."
 
         # 스킬 버튼 배치
+        # 스킬 버튼 배치
         button_width, button_height = 180, 100
         padding = 20
-        cols = SCREEN_WIDTH // (button_width + padding)
-        start_x = (SCREEN_WIDTH - (cols * (button_width + padding) - padding)) // 2
+        max_cols = 6  # 한 줄에 최대 6개
         start_y = 120
 
+        # 6열 그리드 전체 너비를 한 번만 계산해서 화면 가운데 정렬
+        grid_width = max_cols * button_width + (max_cols - 1) * padding
+        base_x = (SCREEN_WIDTH - grid_width) // 2
+
         for i, skill in enumerate(self.skills):
-            col = i % cols
-            row = i // cols
-            x = start_x + col * (button_width + padding)
+            row = i // max_cols  # 몇 번째 줄인지 (0, 1, 2, ...)
+            col = i % max_cols  # 그 줄에서 몇 번째 열인지 (0~5)
+
+            x = base_x + col * (button_width + padding)
             y = start_y + row * (button_height + padding)
-            self.skill_buttons.append(SkillToggleButton(x, y, button_width, button_height, skill))
+
+            self.skill_buttons.append(
+                SkillToggleButton(x, y, button_width, button_height, skill)
+            )
 
         # 선택 완료 버튼
         self.confirm_button = Button(
@@ -479,15 +487,8 @@ class GameManager:
         """플레이어 스킬을 발동시킵니다."""
         target_cells = [self.grid[x][y] for x, y in target_area_pos if 0 <= x < GRID_WIDTH and 0 <= y < GRID_HEIGHT]
 
-        if skill.delay > 0:
-            # TODO: 플레이어 스킬 딜레이 구현 (여우 스킬과 유사하게)
-            # 임시로 즉시 발동
-            skill.activate(self, target_cells, self.player)
-            self.notification_text = f"[{skill.name}] 스킬 사용!"
-        else:
-            # 즉시 발동
-            skill.activate(self, target_cells, self.player)
-            self.notification_text = f"[{skill.name}] 스킬 사용!"
+        skill.activate(self, target_cells, self.player)
+        self.notification_text = f"[{skill.name}] 스킬 사용!"
 
     def rotate_deck(self, hand_index):
         """사용한 스킬을 덱 맨 뒤로 보내고 새 스킬을 뽑습니다."""

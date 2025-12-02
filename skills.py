@@ -81,7 +81,6 @@ class Player_Swiftness(Skill):
     def activate(self, game_manager, target_cells, player):
         print(f"[Player] 신속 발동!")
         player.set_move_speed(PLAYER_SWIFT_MOVE_TIME)
-        # TODO: 2초 후에 원래 속도(PLAYER_MOVE_TIME)로 되돌리는 로직 필요
         # (GameManager에서 '활성 효과' 리스트로 관리)
         game_manager.add_timed_effect('swiftness', 2.0,
                                       on_expire=lambda: player.set_move_speed(PLAYER_MOVE_TIME))
@@ -128,7 +127,6 @@ class Player_Meditation(Skill):
         print(f"[Player] 명상 발동!")
         if player.hp == 1:
             player.set_can_move(False)
-            # TODO: 2초 후 이동 가능 + 체력 회복 로직 필요
             game_manager.add_timed_effect('meditation_heal', 2.0,
                                           on_expire=lambda: (player.set_can_move(True), player.heal(1)))
         elif player.hp == 2:
@@ -150,65 +148,150 @@ class Player_Cross(Skill):
         for cell in target_cells:
             cell.update_hp(1)
 
+class Player_StrongConstruction(Skill):
+    def __init__(self):
+        super().__init__(
+            name="강화건축", cost=5, delay=1.0,
+            description="2x2 영역의 칸 체력을 2 더합니다.",
+            target_type='area', target_size=(2, 2)
+        )
+
+    def activate(self, game_manager, target_cells, player):
+        print(f"[Player] 강화건축 발동!")
+        for cell in target_cells:
+            cell.update_hp(2)
+
+class Player_EmergencyEscape(Skill):
+    """
+    긴급대피: 마우스로 선택한 한 칸으로 즉시 순간이동.
+    도착한 칸이 체력 0이거나 죽은 칸이면, 그 칸을 밟았을 때와 똑같이 처리.
+    """
+    def __init__(self):
+        super().__init__(
+            name="긴급대피",
+            cost=3,
+            delay=0.0,
+            description="마우스로 선택한 칸 한 곳으로 즉시 순간이동합니다.",
+            target_type='area',      # 🔹 한 칸을 타겟으로 잡기 위해 area 사용
+            target_size=(1, 1)       # 🔹 1x1 범위 → 선택한 칸 하나만
+        )
+
+    def activate(self, game_manager, target_cells, player):
+        print("[Player] 긴급대피 발동!")
+
+        if not target_cells:
+            # 이론상 여기로 올 일은 거의 없지만, 안전장치
+            return
+
+        # target_cells는 1x1 범위라서 첫 번째 칸이 우리가 선택한 칸
+        target_cell = target_cells[0]
+        tx, ty = target_cell.grid_x, target_cell.grid_y
+
+        # 🔹 순간이동: 이동 중 애니메이션 없이 즉시 좌표만 갱신
+        player.grid_x = tx
+        player.grid_y = ty
+        player.target_x = tx
+        player.target_y = ty
+        player.is_moving = False   # 강제로 이동 상태 해제
+
+        # 🔹 도착한 칸이 체력 0 / 죽은 칸이면,
+        #    "그 칸을 밟았을 때"와 똑같이 처리되도록 기존 함수 호출
+        player.check_current_cell(game_manager.grid)
+
+class Player_Breakwater(Skill):
+    """
+    방파제: 선택한 위치를 중심으로 가로 1x5 줄의 칸 체력을 1 회복.
+    """
+    def __init__(self):
+        super().__init__(
+            name="방파제", cost=3, delay=0.3,
+            description="가로 1x5 칸의 체력을 1 회복합니다.",
+            target_type='area', target_size=(5, 1)
+        )
+
+    def activate(self, game_manager, target_cells, player):
+        print("[Player] 방파제 발동!")
+        for cell in target_cells:
+            cell.update_hp(1)
+
+# --- 여우 (Fox) 스킬 목록 ---
 
 # --- 여우 (Fox) 스킬 목록 ---
 
 class Fox_Thorn(Skill):
+    """
+    가시 : 2x2 영역에 체력이 1 이하인 칸은 바로 죽이고,
+           나머지 칸은 체력 1 감소
+    """
     def __init__(self):
         super().__init__(
             name="가시", cost=4, delay=1.0,
-            description="2x2 영역, 체력 0인 칸을 죽은 칸으로 만듦",
+            description="2x2 영역에 체력이 1 이하인 칸은 죽이고, 나머지는 체력 1 감소시킵니다.",
             target_type='area', target_size=(2, 2), owner='fox'
         )
 
     def activate(self, game_manager, target_cells, player):
         for cell in target_cells:
-            if cell.hp == 0:
+            if cell.hp <= 1:
                 cell.kill_cell()
+            else:
+                cell.update_hp(-1)
 
 
 class Fox_Arrow(Skill):
+    """
+    화살 : 범위 5x6, 칸 체력 1씩 감소,
+           게가 맞으면 게의 체력 1 감소
+    """
     def __init__(self):
         super().__init__(
-            name="화살", cost=5, delay=1.0,  # (딜레이는 임의로 1초 지정)
-            description="3x5 영역, 칸 체력 1 감소",
-            target_type='area', target_size=(3, 5), owner='fox'
+            name="화살", cost=5, delay=1.0,
+            description="5x6 영역의 칸 체력을 1 감소시킵니다. 게가 맞으면 체력 1 감소.",
+            target_type='area', target_size=(5, 6), owner='fox'
         )
 
     def activate(self, game_manager, target_cells, player):
         for cell in target_cells:
             cell.update_hp(-1)
-        # 플레이어가 맞았는지 체크
+
+        # 플레이어가 범위 안에 있으면 피해 1
         if (player.grid_x, player.grid_y) in [(c.grid_x, c.grid_y) for c in target_cells]:
             player.take_damage(1, game_manager.grid)
 
 
 class Fox_Tracker(Skill):
+    """
+    추적자 : 3초간 게의 위치 여우한테 노출 (UI/연출용 플래그)
+    """
     def __init__(self):
         super().__init__(
             name="추적자", cost=2, delay=0.0,
-            description="2초간 게의 위치 공개",
+            description="3초간 게의 위치가 노출됩니다.",
             target_type='all', owner='fox'
         )
 
     def activate(self, game_manager, target_cells, player):
-        # TODO: 2초간 게 위치 공개 (UI 효과)
-        game_manager.add_timed_effect('tracker_reveal', 2.0)
+        game_manager.add_timed_effect('tracker_reveal', 3.0)
 
 
 class Fox_Peek(Skill):
+    """
+    들춰보기 : 5x5 영역에 1초간 체력을 -1 했다가 +1
+               (잠깐 약해졌다가 원상복구)
+    """
     def __init__(self):
         super().__init__(
             name="들춰보기", cost=3, delay=0.7,
-            description="2x3 영역, 1초간 체력 -1 했다가 +1",
-            target_type='area', target_size=(2, 3), owner='fox'
+            description="5x5 영역의 칸을 1초간 체력 -1 했다가 +1로 되돌립니다.",
+            target_type='area', target_size=(5, 5), owner='fox'
         )
 
     def activate(self, game_manager, target_cells, player):
+        # 즉시 -1
         for cell in target_cells:
             cell.update_hp(-1)
 
-        # TODO: 1초 후 체력 +1 복구
+        # 1초 후 +1로 되돌리기
         def restore_hp():
             for cell in target_cells:
                 cell.update_hp(1)
@@ -217,26 +300,69 @@ class Fox_Peek(Skill):
 
 
 class Fox_FocusHit(Skill):
+    """
+    집중타격 : 열 십 모양에
+              - 가운데 교차점: 체력 2 감소
+              - 나머지 칸들: 체력 1 감소
+              - 이미 체력이 0인 칸은 죽은 칸 처리
+    (범위 모양은 calculate_plus_area(center) 사용)
+    """
     def __init__(self):
         super().__init__(
             name="집중타격", cost=5, delay=0.7,
-            description="열 십(十) 모양, 칸 체력 2 감소",
-            target_type='area', owner='fox'  # get_target_area에서 이름으로 분기
+            description="열 십 모양. 중심은 체력 2 감소, 나머지는 1 감소. 체력 0은 죽은 칸 처리.",
+            target_type='area', owner='fox'  # get_target_area에서 이름으로 plus 모양 계산
         )
 
     def activate(self, game_manager, target_cells, player):
-        for cell in target_cells:
-            cell.update_hp(-2)
-        if (player.grid_x, player.grid_y) in [(c.grid_x, c.grid_y) for c in target_cells]:
-            player.take_damage(1, game_manager.grid)  # (데미지 1로 임의 지정)
+        if not target_cells:
+            return
+
+        # 중심 칸 찾기:
+        # 이 plus 모양에서 가장 이웃(상하좌우)을 많이 가진 칸이 교차점이라고 보고 선택
+        pos_to_cell = {(c.grid_x, c.grid_y): c for c in target_cells}
+        best_pos = None
+        best_neighbor_count = -1
+
+        for (x, y), cell in pos_to_cell.items():
+            cnt = 0
+            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                if (x + dx, y + dy) in pos_to_cell:
+                    cnt += 1
+            if cnt > best_neighbor_count:
+                best_neighbor_count = cnt
+                best_pos = (x, y)
+
+        # 중심 칸과 나머지 칸들을 나눔
+        center_cell = pos_to_cell.get(best_pos)
+        other_cells = [c for (pos, c) in pos_to_cell.items() if pos != best_pos]
+
+        # 중심 칸: 체력 2 감소
+        if center_cell is not None:
+            center_cell.update_hp(-2)
+            if center_cell.hp == 0:
+                center_cell.kill_cell()
+
+        # 나머지 칸: 체력 1 감소, 0이면 죽은 칸 처리
+        for cell in other_cells:
+            cell.update_hp(-1)
+            if cell.hp == 0:
+                cell.kill_cell()
+
+        # 플레이어가 범위 안에 있으면 피해 1
+        if (player.grid_x, player.grid_y) in pos_to_cell:
+            player.take_damage(1, game_manager.grid)
 
 
 class Fox_DirectLight(Skill):
+    """
+    직사광선 : 1x10 칸 체력 1 감소, 체력이 0인 칸은 죽은 칸 처리
+    """
     def __init__(self):
         super().__init__(
             name="직사광선", cost=4, delay=0.3,
-            description="세로 1x8, 칸 체력 1 감소. 체력 0인 칸은 죽은 칸 처리.",
-            target_type='area', target_size=(1, 8), owner='fox'
+            description="세로 1x10 영역의 칸 체력을 1 감소시키고, 0이 되면 죽입니다.",
+            target_type='area', target_size=(1, 10), owner='fox'
         )
 
     def activate(self, game_manager, target_cells, player):
@@ -244,21 +370,45 @@ class Fox_DirectLight(Skill):
             cell.update_hp(-1)
             if cell.hp == 0:
                 cell.kill_cell()
+
         if (player.grid_x, player.grid_y) in [(c.grid_x, c.grid_y) for c in target_cells]:
             player.take_damage(1, game_manager.grid)
 
 
 class Fox_Cross(Skill):
+    """
+    십자가 : 가로 5, 세로 5인 십자가 모양 칸 체력을 1 감소
+    (범위 모양은 calculate_cross_area(center) 사용)
+    """
     def __init__(self):
         super().__init__(
             name="십자가", cost=2, delay=0.5,
-            description="십자가 모양, 칸 체력 1 감소",
-            target_type='area', owner='fox'  # get_target_area에서 이름으로 분기
+            description="가로 5, 세로 5의 십자가 모양 칸 체력을 1 감소시킵니다.",
+            target_type='area', owner='fox'  # get_target_area에서 이름으로 cross 모양 계산
         )
 
     def activate(self, game_manager, target_cells, player):
         for cell in target_cells:
             cell.update_hp(-1)
+
+        if (player.grid_x, player.grid_y) in [(c.grid_x, c.grid_y) for c in target_cells]:
+            player.take_damage(1, game_manager.grid)
+
+
+class Fox_Sandstorm(Skill):
+    def __init__(self):
+        super().__init__(
+            name="모래폭풍", cost=5, delay=1.0,
+            description="4x4 영역의 칸 체력을 1 감소시키고, 0이 되면 죽입니다. 게가 맞으면 체력 1 감소.",
+            target_type='area', target_size=(4, 4), owner='fox'
+        )
+
+    def activate(self, game_manager, target_cells, player):
+        for cell in target_cells:
+            cell.update_hp(-1)
+            if cell.hp == 0:
+                cell.kill_cell()
+
         if (player.grid_x, player.grid_y) in [(c.grid_x, c.grid_y) for c in target_cells]:
             player.take_damage(1, game_manager.grid)
 
@@ -274,6 +424,9 @@ def load_all_player_skills():
         Player_ConstructionWork(),
         Player_Meditation(),
         Player_Cross(),
+        Player_StrongConstruction(),
+        Player_EmergencyEscape(),
+        Player_Breakwater()
         # (새로운 스킬 추가)
     ]
 
@@ -288,4 +441,5 @@ def load_all_fox_skills():
         Fox_FocusHit(),
         Fox_DirectLight(),
         Fox_Cross(),
+        Fox_Sandstorm()  # 새로 추가된 스킬
     ]

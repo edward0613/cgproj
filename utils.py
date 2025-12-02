@@ -151,9 +151,9 @@ def calculate_cross_area(center_grid_pos):
     area = []
     positions = [
         (cx, cy),  # 중앙
-        (cx, cy - 1),  # 상
-        (cx, cy + 1),  # 하
-        (cx - 1, cy),  # 좌
+        (cx, cy - 1), # 상
+        (cx, cy + 1), (cx, cy + 2), # 하
+        (cx - 1, cy), # 좌
         (cx + 1, cy)  # 우
     ]
 

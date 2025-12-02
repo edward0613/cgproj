@@ -339,15 +339,16 @@ class Fox_FocusHit(Skill):
 
         # 중심 칸: 체력 2 감소
         if center_cell is not None:
-            center_cell.update_hp(-2)
             if center_cell.hp == 0:
                 center_cell.kill_cell()
+            center_cell.update_hp(-2)
+
 
         # 나머지 칸: 체력 1 감소, 0이면 죽은 칸 처리
         for cell in other_cells:
+            if center_cell.hp == 0:
+                center_cell.kill_cell()
             cell.update_hp(-1)
-            if cell.hp == 0:
-                cell.kill_cell()
 
         # 플레이어가 범위 안에 있으면 피해 1
         if (player.grid_x, player.grid_y) in pos_to_cell:

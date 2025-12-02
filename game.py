@@ -27,7 +27,7 @@ def bring_window_to_front():
 class Game:
     """
     메인 게임 클래스.
-    게임의 전반적인 흐름, 상태 관리, 화면 전환을 담당합니다.
+    게임의 전반적인 흐름, 상태 관리, 화면 전환을 담당한다.
     """
 
     def __init__(self):
@@ -58,7 +58,7 @@ class Game:
         self.current_screen = self.screens['MENU']
         self.opening_proc = None
 
-    def return_to_menu(self):
+    def return_to_menu(self):#메뉴로 이동
         if self.game_state == 'MENU':
             self.quit_game()
             return
@@ -73,7 +73,7 @@ class Game:
         }
         self.current_screen = self.screens['MENU']
 
-    def run(self):
+    def run(self):#게임 실행
         while True:
             events = pygame.event.get()
             for event in events:
@@ -81,7 +81,7 @@ class Game:
                     self.quit_game()
 
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    # 🔥 전체 종료 대신 메뉴로 돌아가기
+                    # 전체 종료 대신 메뉴로 돌아가기
                     pygame.mixer.music.stop()
                     self.return_to_menu()
 
@@ -89,7 +89,6 @@ class Game:
             result = self.current_screen.handle_events(events)
             self.handle_transition(result)
 
-            # 업데이트 결과도 transition으로 넘기기!!! ← 중요
             dt = self.clock.tick(FPS) / 1000.0
             update_result = self.current_screen.update(dt)
             self.handle_transition(update_result)
@@ -98,10 +97,8 @@ class Game:
             self.current_screen.draw(self.screen)
             pygame.display.flip()
 
-    def handle_transition(self, result):
-        """
-        화면으로부터 받은 결과(result)를 바탕으로 게임 상태를 전환합니다.
-        """
+    def handle_transition(self, result):#게임상태 전환
+
         if result is None:
             return
 
@@ -121,66 +118,33 @@ class Game:
             print("오프닝 실행...")
 
             try:
-
-                # 🔥 게임 창 이벤트 모두 삭제 (충돌 방지)
-
                 pygame.event.clear()
-
-                # 🔥 게임 창 최소화 → opening.py 주 화면
-
                 pygame.display.iconify()
-
-                # 🔥 opening 실행
-
                 proc = subprocess.Popen([sys.executable, "opening.py"])
-
                 proc.wait()
-
-                # 🔥 opening 종료 후 게임 창 복구
-
                 pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-
                 bring_window_to_front()
             except FileNotFoundError:
-
                 print("'opening.py'를 찾을 수 없습니다. 오프닝 건너뜀.")
-
-
             except Exception as e:
-
                 print(f"오프닝 실행 중 오류: {e}")
-
-
             except FileNotFoundError:
-
                 print("'opening.py'를 찾을 수 없습니다. 오프닝 건너뜀.")
-
             except Exception as e:
-
                 print(f"오프닝 실행 중 오류: {e}")
-
             # 오프닝 끝나면 스킬 선택 화면으로 전환
-
             self.game_state = 'SKILL_SELECT'
-
             # screens['SKILL_SELECT']를 새로 생성
-
             self.screens['SKILL_SELECT'] = SkillSelectScreen(self.all_player_skills)
-
             self.current_screen = self.screens['SKILL_SELECT']
-
-
-
         elif isinstance(result, tuple) and result[0] == 'GAME_START':
             # 스킬 선택 완료. ('GAME_START', [선택한 스킬 객체 리스트])
             selected_skills = result[1]
             print(f"게임 시작! 선택한 스킬: {[skill.name for skill in selected_skills]}")
-
             # 새로운 GameScreen 인스턴스 생성
             self.screens['IN_GAME'] = GameScreen(selected_skills)
             self.game_state = 'IN_GAME'
             self.current_screen = self.screens['IN_GAME']
-
 
         elif result == 'GAME_OVER':
 
@@ -188,25 +152,16 @@ class Game:
 
             try:
 
-                # 🔥 game.py 창의 모든 이벤트 제거 → 클릭 충돌 차단
-
                 pygame.event.clear()
 
-                # 🔥 게임 창을 최소화시켜 사용자 클릭을 못하게 함
-
                 pygame.display.iconify()
-
-                # 🔥 ending.py 실행
 
                 proc = subprocess.Popen([sys.executable, "ending.py"])
 
                 proc.wait()
 
-                # 🔥 ending.py 종료 후 게임 창 복원
-
                 pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
                 bring_window_to_front()
-                # 🔥 결과에 따라 재시작/종료 처리
 
                 if proc.returncode == 1:
 
@@ -240,7 +195,7 @@ class Game:
 
                 self.quit_game()
 
-    def quit_game(self):
+    def quit_game(self):#종료ㅜ
         """게임을 종료합니다."""
         pygame.quit()
         sys.exit()

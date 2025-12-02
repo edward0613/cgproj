@@ -19,9 +19,9 @@ class Cell:
         self.grid_y = grid_y
         self.hp = 1
         self.max_hp = 3
-        self.is_dead = False  # '가시' 스킬로 인한 죽은 상태
+        self.is_dead = False  # 죽은 상태
 
-        # 셀의 화면 위치 (미리 계산)
+        # 셀의 화면 위치
         self.screen_x, self.screen_y = get_screen_pos(self.grid_x, self.grid_y)
         self.rect = pygame.Rect(self.screen_x, self.screen_y, CELL_WIDTH, CELL_HEIGHT)
 
@@ -34,7 +34,6 @@ class Cell:
             3: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_3'),alpha=True), (CELL_WIDTH, CELL_HEIGHT)),
             4: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_4'),alpha=True), (CELL_WIDTH, CELL_HEIGHT)),
             5: pygame.transform.scale(load_image(IMAGE_PATH.get('CELL_5'),alpha=True), (CELL_WIDTH, CELL_HEIGHT)),
-            # ... (더 많은 체력 이미지 추가 가능)
         }
         self.image = self.get_current_image()
 

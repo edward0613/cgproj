@@ -74,7 +74,7 @@ class Player_Swiftness(Skill):
     def __init__(self):
         super().__init__(
             name="신속", cost=2, delay=0.0,
-            description="2초간 이동 간격을 0.2초로 만듭니다.",
+            description="2초간 이동 간격을 0.1초로 만듭니다.",
             target_type='all'  # 전체 대상 (하이라이트 없음)
         )
 

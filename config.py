@@ -45,7 +45,7 @@ FOX_ATTACK_EXEC_COLOR = (0, 255, 0, 150) # 여우 공격 실행 (초록색, 반�
 # 플레이어 설정
 PLAYER_START_HP = 2
 PLAYER_MOVE_TIME = 0.3  # 1칸 이동 시간 (초)
-PLAYER_SWIFT_MOVE_TIME = 0.2 # 신속 스킬 사용 시
+PLAYER_SWIFT_MOVE_TIME = 0.1 # 신속 스킬 사용 시
 PLAYER_INVINCIBLE_TIME = 1.0 # 피격 후 무적 시간 (초)
 
 # 게임 시스템 설정
@@ -53,7 +53,7 @@ MAX_MONEY = 12
 MONEY_GAIN_INTERVAL = 1.7 # 돈 1원 획득 시간 (초)
 
 # 파일 경로
-FONT_PATH = "CookieRunBold.ttf" # 기본 폰트 사용. 특별한 폰트 사용 시 "path/to/font.ttf"
+FONT_PATH = "CookieRunBold.ttf"
 IMAGE_PATH = {
     'SHORE_BG': 'shore.png',
     'SQUARE_UI': 'square.png',

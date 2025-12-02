@@ -37,8 +37,7 @@ class Cell:
         }
         self.image = self.get_current_image()
 
-    def get_current_image(self):
-        """현재 상태에 맞는 이미지를 반환합니다."""
+    def get_current_image(self):#이미지 반환
         if self.is_dead:
             return self.cell_images['dead']
 
@@ -50,11 +49,7 @@ class Cell:
             return self.cell_images[0]
         return self.cell_images[hp_key]
 
-    def update_hp(self, amount):
-        """
-        칸의 체력을 amount만큼 변경합니다.
-        죽은 칸은 체력을 변경할 수 없습니다 (재건축 스킬 제외).
-        """
+    def update_hp(self, amount):#hp 변경
         if self.is_dead:
             return
 
@@ -63,14 +58,12 @@ class Cell:
         self.hp = max(0, min(self.hp, self.max_hp))
         self.image = self.get_current_image()
 
-    def set_max_hp(self, amount):
-        """최대 체력을 amount만큼 증가시킵니다."""
+    def set_max_hp(self, amount):#최대 체력을 amount만큼 증가
         if self.is_dead:
             return
         self.max_hp += amount
 
-    def kill_cell(self):
-        """'가시' 또는 '직사광선' 스킬로 칸을 죽은 상태로 만듭니다."""
+    def kill_cell(self):#스킬로 칸을 죽은 상태로 만듬.
         self.hp = 0
         self.is_dead = True
         self.image = self.get_current_image()
@@ -139,8 +132,7 @@ class Player:
 
     def update(self, dt, grid):
         """
-        플레이어 로직 업데이트 (이동, 무적 시간).
-        grid: [[Cell, ...], ...] 2차원 리스트
+        플레이어 로직 업데이트
         """
         # 1. 무적 시간 업데이트
         if self.is_invincible:

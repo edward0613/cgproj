@@ -50,7 +50,7 @@ PLAYER_INVINCIBLE_TIME = 1.0 # 피격 후 무적 시간 (초)
 
 # 게임 시스템 설정
 MAX_MONEY = 12
-MONEY_GAIN_INTERVAL = 5.0 # 돈 1원 획득 시간 (초)
+MONEY_GAIN_INTERVAL = 1.0 # 돈 1원 획득 시간 (초)
 
 # 파일 경로
 FONT_PATH = "CookieRunBold.ttf" # 기본 폰트 사용. 특별한 폰트 사용 시 "path/to/font.ttf"
@@ -71,4 +71,7 @@ IMAGE_PATH = {
     'MENU_BUTTON': 'buttonimg.png',
     'GAME_BG': 'backscreen4.png',
     'CRAB': 'crab.png'
+}
+SOUND_PATH = {
+    "GAME_BGM": "Crab and Fox Chase.mp3"
 }

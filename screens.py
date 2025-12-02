@@ -1,5 +1,6 @@
 import pygame
 import random
+from config import SOUND_PATH
 from config import (
     SCREEN_WIDTH, SCREEN_HEIGHT, BLACK, WHITE, GRAY,
     GRID_WIDTH, GRID_HEIGHT, GRID_START_X, GRID_START_Y,
@@ -220,6 +221,12 @@ class GameScreen(BaseScreen):
     def __init__(self, selected_skills):
         super().__init__()
         self.game_manager = GameManager(selected_skills)
+        try:
+            pygame.mixer.music.load(SOUND_PATH["GAME_BGM"])
+            pygame.mixer.music.play(-1)  # -1 = 무한 반복
+            pygame.mixer.music.set_volume(0.6)  # 필요하면 볼륨 조절 (0.0~1.0)
+        except Exception as e:
+            print("BGM 로드 실패:", e)
 
         self.background = load_image(IMAGE_PATH['GAME_BG'])
         self.background = pygame.transform.scale(

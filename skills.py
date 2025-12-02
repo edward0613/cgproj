@@ -237,7 +237,20 @@ class Fox_Thorn(Skill):
             else:
                 cell.update_hp(-1)
 
+class Fox_SuperThorn(Skill):
+    """
+    강한가시 : 2x2 영역을 죽인다
+    """
+    def __init__(self):
+        super().__init__(
+            name="가시", cost=2, delay=1.0,
+            description="2x2 영역에 체력이 0 이하인 칸을 죽인다",
+            target_type='area', target_size=(2, 2), owner='fox'
+        )
 
+    def activate(self, game_manager, target_cells, player):
+        for cell in target_cells:
+            cell.kill_cell()
 class Fox_Arrow(Skill):
     """
     화살 : 범위 5x6, 칸 체력 1씩 감소,
@@ -259,7 +272,7 @@ class Fox_Arrow(Skill):
             player.take_damage(1, game_manager.grid)
 
 
-class Fox_Tracker(Skill):
+'''class Fox_Tracker(Skill):
     """
     추적자 : 3초간 게의 위치 여우한테 노출 (UI/연출용 플래그)
     """
@@ -271,7 +284,7 @@ class Fox_Tracker(Skill):
         )
 
     def activate(self, game_manager, target_cells, player):
-        game_manager.add_timed_effect('tracker_reveal', 3.0)
+        game_manager.add_timed_effect('tracker_reveal', 3.0)'''#폐기
 
 
 class Fox_Peek(Skill):
@@ -434,7 +447,6 @@ def load_all_fox_skills():
     return [
         Fox_Thorn(),
         Fox_Arrow(),
-        Fox_Tracker(),
         Fox_Peek(),
         Fox_FocusHit(),
         Fox_DirectLight(),

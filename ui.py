@@ -112,7 +112,6 @@ class NotificationBar:
     """
     상단 알림창 UI.
     """
-
     def __init__(self, x, y, width, height, bg_color=WHITE, text_color=BLACK, font_size=30):
         self.rect = pygame.Rect(x, y, width, height)
         self.bg_color = bg_color
@@ -152,7 +151,6 @@ class SkillHandUI:
     """
     본게임 하단 스킬 핸드 UI.
     """
-
     def __init__(self, x, y, width, height, font_size=18):
         self.rect = pygame.Rect(x, y, width, height)
         self.font = get_font(FONT_PATH, font_size)
@@ -188,8 +186,6 @@ class SkillHandUI:
             name_rect = name_surf.get_rect(centerx=rect.centerx, top=rect.top + 25)
             surface.blit(name_surf, name_rect)
 
-
-
             # 3. 키 라벨 (Q, W, E, R)
             key_font = get_font(FONT_PATH, 24)
             key_surf = key_font.render(key_labels[i], True, BLACK)
@@ -202,7 +198,6 @@ class MoneyGauge:
     """
     돈 게이지 UI.
     """
-
     def __init__(self, x, y, width, height, max_money, font_size=20):
         self.rect = pygame.Rect(x, y, width, height)
         self.max_money = max_money

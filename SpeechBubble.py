@@ -3,13 +3,9 @@ import pygame
 import os
 from config import FONT_PATH
 
-# ===== 폰트 로더 (넥슨 배민 한나체 Pro 공용) =====
-def load_hanna_fonts():
-    """
-    프로젝트 기준:
-    ./fonts/BMHANNAPro.ttf  경로에 폰트 파일이 있다고 가정.
-    pygame.init() 이후에 호출해야 함.
-    """
+
+def load_fonts():
+
     base_dir = os.path.dirname(__file__)
 
     # 필요하면 사이즈는 여기서만 바꿔주면 opening/ending 둘 다 적용됨
@@ -149,7 +145,6 @@ class EndingSpeechBubble(MakeSpeechBubble):
     엔딩에서 사용하는 말풍선.
     기본 MakeSpeechBubble에 '화면 안으로 강제(clamp)' 기능을 추가.
     """
-
     def _compute_geometry(self):
         bubble_x, bubble_y, tail_tip_x, tail_tip_y = super()._compute_geometry()
 

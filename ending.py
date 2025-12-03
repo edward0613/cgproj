@@ -8,37 +8,36 @@ import opening
 from SpeechBubble import (
     EndingSpeechBubble,
     BubbleOwner,
-    load_hanna_fonts,
+    load_fonts,
 )
 
 pygame.init()
 
-# ===== 기본 설정 =====
+# 기본 설정
 WIDTH, HEIGHT = opening.WIDTH, opening.HEIGHT
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Crab & Fox Ending")
 
 clock = pygame.time.Clock()
 
-# ===== 폰트 (공통: 한나체) =====
-font_main, font_small = load_hanna_fonts()
+# 폰트 (공통: 한나체)
+font_main, font_small = load_fonts()
 
-
-# ===== 이미지 / 리소스 관리 클래스 =====
+# 이미지 / 리소스 관리 클래스
 class Assets:
     def __init__(self, width: int, height: int):
         # 육지 배경
         self.shore_bg = pygame.image.load("shore.png").convert()
         self.shore_bg = pygame.transform.scale(self.shore_bg, (width, height))
 
-        # 게 이미지 (1/4 크기)
+        # 게 이미지
         crab_base_img = pygame.image.load("crab2.png").convert_alpha()
         cw, ch = crab_base_img.get_size()
         self.crab_base_img = pygame.transform.smoothscale(
             crab_base_img, (int(cw / 2), int(ch / 2))
         )
 
-        # 여우 이미지 (1/2 크기)
+        # 여우 이미지
         fox_img = pygame.image.load("fox2.png").convert_alpha()
         fw, fh = fox_img.get_size()
         self.fox_img = pygame.transform.smoothscale(
@@ -46,7 +45,7 @@ class Assets:
         )
 
 
-# ===== 엔딩 연출 클래스 =====
+# 엔딩 연출 클래스
 class Ending:
     def __init__(self, assets: Assets):
         self.assets = assets
@@ -117,7 +116,7 @@ class Ending:
         self.end_fade_target = 128
         self.end_fade_speed = 200
 
-    # --- 게 이미지(회전/스케일) 얻기: 중심 기준 ---
+    # 게 이미지(회전/스케일) 얻기: 중심 기준
     def get_crab_surf_and_rect(self):
         if not self.crab_visible:
             return None, None
@@ -138,7 +137,7 @@ class Ending:
         rect = img.get_rect(center=(self.crab_center[0], self.crab_center[1]))
         return img, rect
 
-    # --- 단계 시작 ---
+    # 단계 시작
     def start_phase1(self):
         self.phase = 1
         self.space_hint = True
@@ -182,7 +181,7 @@ class Ending:
         self.space_hint = False
         self.end_fade_alpha = 0
 
-    # --- 스페이스 처리 ---
+    # 스페이스 처리
     def handle_space(self):
         if self.phase == 1:
             self.fade_alpha = 0
@@ -211,7 +210,7 @@ class Ending:
             # 엔딩 상태에서 스페이스는 특별한 동작 없음
             pass
 
-    # --- 업데이트 ---
+    # 업데이트
     def update(self, dt):
         if self.phase == 1:
             if self.fade_alpha > 0:
@@ -265,7 +264,7 @@ class Ending:
                 if self.end_fade_alpha > self.end_fade_target:
                     self.end_fade_alpha = self.end_fade_target
 
-    # --- 그리기 ---
+    # 그리기
     def draw(self, surface):
         # 배경(육지)
         surface.blit(self.assets.shore_bg, (0, 0))
@@ -313,8 +312,7 @@ class Ending:
             hint_rect = hint.get_rect(midtop=(WIDTH // 2, 10))
             surface.blit(hint, hint_rect)
 
-
-# ===== 앱 / 메인 루프 클래스 =====
+# 앱 / 메인 루프 클래스
 class EndingApp:
     def __init__(self):
         self.screen = screen
@@ -353,14 +351,14 @@ class EndingApp:
 
         return restart_to_opening
 
-# ===== 진입점 =====
+# 진입점
 def main():
     app = EndingApp()
     restart = app.run()
 
     pygame.quit()
 
-    # 여기서는 프로세스 종료 코드만 돌려준다.
+    # 여기서는 프로세스 종료 코드만 돌려줌
     # Q(재시작) → 1, R(종료) → 0
     if restart:
         return 1

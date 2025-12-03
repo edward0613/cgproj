@@ -16,7 +16,7 @@ from skills import load_all_fox_skills
 
 
 class BaseScreen:
-    """모든 화면 클래스의 기본이 되는 클래스."""
+    """모든 화면 클래스의 기본이 되는 클래스"""
 
     def __init__(self):
         pass
@@ -29,7 +29,6 @@ class BaseScreen:
 
     def draw(self, surface):
         raise NotImplementedError
-
 
 class MenuScreen(BaseScreen):
     """메뉴 화면."""
@@ -136,10 +135,9 @@ class SkillSelectScreen(BaseScreen):
         self.notification_text = "5개의 스킬을 선택하세요."
 
         # 스킬 버튼 배치
-        # 스킬 버튼 배치
         button_width, button_height = 180, 100
         padding = 20
-        max_cols = 6  # 한 줄에 최대 6개
+        max_cols = 6
         start_y = 120
 
         # 6열 그리드 전체 너비를 한 번만 계산해서 화면 가운데 정렬
@@ -147,7 +145,7 @@ class SkillSelectScreen(BaseScreen):
         base_x = (SCREEN_WIDTH - grid_width) // 2
 
         for i, skill in enumerate(self.skills):
-            row = i // max_cols  # 몇 번째 줄인지 (0, 1, 2, ...)
+            row = i // max_cols  # 몇 번째 줄인지
             col = i % max_cols  # 그 줄에서 몇 번째 열인지 (0~5)
 
             x = base_x + col * (button_width + padding)
@@ -186,7 +184,6 @@ class SkillSelectScreen(BaseScreen):
                 b.handle_event(event)
 
         # 3) 알림창 텍스트 결정 (이벤트 필요 없음)
-        #    ★ 여기서 hover 된 스킬 찾기
         hovered_skill = None
         for b in self.skill_buttons:
             if b.is_hovered:
@@ -223,7 +220,7 @@ class SkillSelectScreen(BaseScreen):
 class GameScreen(BaseScreen):
     """
     메인 게임 화면.
-    GameManager를 포함하여 실제 게임 로직과 UI를 연결합니다.
+    GameManager를 포함하여 실제 게임 로직과 UI를 연결
     """
 
     def __init__(self, selected_skills):
@@ -506,7 +503,6 @@ class GameManager:
         if self.player.hp <= 0:
             return 'GAME_OVER'
 
-
         # 2. 돈 획득
         self.money_timer += dt
         if self.money_timer >= MONEY_GAIN_INTERVAL:
@@ -553,18 +549,17 @@ class GameManager:
         self.fox_ai_timer -= dt
         if self.fox_ai_timer <= 0:
             # 5~10초 사이 랜덤 쿨타임
-            self.fox_ai_timer = random.uniform(0.7, 1.0)
+            self.fox_ai_timer = random.uniform(1.0, 1.4)
 
             # 랜덤 스킬 선택
             skill_to_use = random.choice(self.fox_skills)
 
             # 랜덤 타겟 위치 (플레이어 근처 또는 랜덤)
-            k=random.randint(1, 8)
+            k=random.randint(1, 15)
             if k==1:
                 target_pos = (self.player.grid_x, self.player.grid_y)
             else:
                 target_pos = (random.randint(0, GRID_WIDTH - 1), random.randint(0, GRID_HEIGHT - 1))
-
 
             target_area_pos = skill_to_use.get_target_area(target_pos, player=self.player)
 
@@ -589,7 +584,7 @@ class GameManager:
         })
 
     def draw_grid(self, surface):
-        """모든 셀을 그립니다."""
+        """모든 셀을 그림"""
         for x in range(GRID_WIDTH):
             for y in range(GRID_HEIGHT):
                 self.grid[x][y].draw(surface)

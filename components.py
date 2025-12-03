@@ -8,12 +8,8 @@ from config import (
 from utils import load_image, get_screen_pos
 from config import IMAGE_PATH, SCREEN_WIDTH, SCREEN_HEIGHT
 
-
 class Cell:
-    """
-    게임판의 각 칸(Cell)을 나타내는 클래스.
-    """
-
+    """게임판의 각 칸(Cell)을 나타내는 클래스."""
     def __init__(self, grid_x, grid_y):
         self.grid_x = grid_x
         self.grid_y = grid_y
@@ -69,7 +65,7 @@ class Cell:
         self.image = self.get_current_image()
 
     def revive_cell(self):
-        """'재건축' 스킬로 칸을 부활시킵니다."""
+        """'재건축' 스킬로 칸을 부활시킴"""
         if self.is_dead:
             self.is_dead = False
             self.hp = 1
@@ -77,7 +73,7 @@ class Cell:
             self.image = self.get_current_image()
 
     def draw(self, surface):
-        """칸을 그립니다."""
+        """칸을 그림"""
         surface.blit(self.image, self.rect.topleft)
         # (옵션) 체력 텍스트 표시
         # font = get_font(None, 15)
@@ -85,12 +81,8 @@ class Cell:
         # text_rect = text_surf.get_rect(center=self.rect.center)
         # surface.blit(text_surf, text_rect)
 
-
 class Player:
-    """
-    플레이어(게) 클래스.
-    """
-
+    """플레이어(게) 클래스."""
     def __init__(self, start_grid_x, start_grid_y):
         self.hp = PLAYER_START_HP
         self.grid_x = start_grid_x
@@ -121,7 +113,7 @@ class Player:
         self.font_hp = pygame.font.Font(FONT_PATH, 40)
 
     def set_target(self, grid_x, grid_y):
-        """이동 목표 지점을 설정합니다."""
+        """이동 목표 지점 설정"""
         if not self.can_move:
             return
 
@@ -131,9 +123,7 @@ class Player:
             self.is_moving = True
 
     def update(self, dt, grid):
-        """
-        플레이어 로직 업데이트
-        """
+        """플레이어 로직 업데이트"""
         # 1. 무적 시간 업데이트
         if self.is_invincible:
             self.invincible_timer -= dt
@@ -148,11 +138,11 @@ class Player:
                 self.move_timer = self.move_speed  # 타이머 리셋
                 self.move_one_step()
 
-                # 이동 후 현재 칸 상태 체크
+        # 이동 후 현재 칸 상태 체크
         self.check_current_cell(grid)
 
     def move_one_step(self):
-        """목표를 향해 1칸 이동합니다 (X축 먼저, 그 다음 Y축)."""
+        """목표를 향해 1칸 이동 (X축 먼저, 그 다음 Y축)."""
         if self.grid_x != self.target_x:
             # X축 이동
             if self.target_x > self.grid_x:
@@ -170,9 +160,7 @@ class Player:
             self.is_moving = False
 
     def check_current_cell(self, grid):
-        """
-        현재 밟고 있는 칸을 체크하여 데미지를 입는지 확인합니다.
-        """
+        """현재 밟고 있는 칸을 체크하여 데미지를 입는지 확인"""
         if self.is_invincible:
             return
 
@@ -183,9 +171,7 @@ class Player:
             self.take_damage(1, grid)
 
     def take_damage(self, amount, grid):
-        """
-        데미지를 입고, 무적 상태가 되며, 랜덤 텔레포트를 합니다.
-        """
+        """데미지를 입고, 무적 상태가 되며, 랜덤 텔레포트 합니다."""
         if self.is_invincible:
             return
 
@@ -203,7 +189,7 @@ class Player:
             self.is_moving = False
 
     def teleport_randomly(self, grid):
-        """체력이 1 이상인 임의의 칸으로 순간이동합니다."""
+        """체력이 1 이상인 임의의 칸으로 순간이동"""
         safe_cells = []
         for x in range(GRID_WIDTH):
             for y in range(GRID_HEIGHT):
@@ -226,22 +212,22 @@ class Player:
             self.grid_y = GRID_HEIGHT // 2
 
     def set_move_speed(self, speed):
-        """이동 속도를 변경합니다 (신속 스킬용)."""
+        """이동 속도를 변경 (신속 스킬용)."""
         self.move_speed = speed
 
     def set_can_move(self, can_move):
-        """이동 가능 여부를 설정합니다 (명상 스킬용)."""
+        """이동 가능 여부를 설정 (명상 스킬용)."""
         self.can_move = can_move
         if not can_move:
             self.is_moving = False
 
     def heal(self, amount):
-        """체력을 회복합니다."""
+        """체력을 회복"""
         self.hp += amount
         self.hp = min(self.hp, PLAYER_START_HP)  # 최대 체력 2
 
     def draw(self, surface):
-        """플레이어를 그립니다."""
+        """플레이어를 그림"""
         screen_x, screen_y = get_screen_pos(self.grid_x, self.grid_y)[0]-(self.width//2)+CELL_WIDTH//2,get_screen_pos(self.grid_x, self.grid_y)[1]-(self.height//2)+CELL_HEIGHT//2
         if self.is_invincible:
             # 무적 상태일 때 반짝임 (간단하게 투명도 조절)
@@ -266,8 +252,7 @@ class Player:
         time_surf = self.font_time.render(time_text, True, (255, 255, 255))
         hp_surf = self.font_hp.render(hp_text, True, (255, 255, 255))
 
-        # 4) 위치 (왼쪽 상단, 격자 왼쪽이라고 생각하고 여백만 주기)
-        #    필요하면 숫자 조금씩 바꿔서 딱 원하는 위치로 조정하면 됨
+        # 4) 위치
         time_pos = (25, 90)
         hp_pos = (25, 20 + time_surf.get_height() + 70)
 

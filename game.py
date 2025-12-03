@@ -5,7 +5,9 @@ import subprocess
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 from screens import MenuScreen, SkillSelectScreen, GameScreen
 from skills import load_all_player_skills
+
 SW_RESTORE = 9
+
 def bring_window_to_front():
     try:
         hwnd = pygame.display.get_wm_info()["window"]
@@ -24,22 +26,15 @@ def bring_window_to_front():
 
     except Exception as e:
         print("bring_window_to_front 실패:", e)
+
 class Game:
-    """
-    메인 게임 클래스.
-    게임의 전반적인 흐름, 상태 관리, 화면 전환을 담당한다.
-    """
+    """메인 게임 클래스.
+    게임의 전반적인 흐름, 상태 관리, 화면 전환을 담당"""
 
     def __init__(self):
         pygame.init()
         pygame.font.init()  # 폰트 모듈 초기화
 
-        # Pygame 2.0.0 이상에서는 pygame.FULLSCREEN | pygame.SCALED 사용 가능
-        # 여기서는 우선 FULLSCREEN 플래그만 사용합니다.
-        # try:
-        #     self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
-        # except pygame.error:
-        #     print("전체 화면 모드를 지원하지 않아, 창 모드로 실행합니다.")
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
         pygame.display.set_caption("갯벌에서 살아남기")
@@ -106,17 +101,12 @@ class Game:
             self.quit_game()
 
         elif result == 'TUTORIAL':
-
             print("튜토리얼 시작")
-
             from screens import TutorialScreen  # screens.py 안에 넣었다면 필요
-
             self.game_state = 'TUTORIAL'
-
             self.current_screen = TutorialScreen()
 
         elif result == 'START_GAME':
-
             print("오프닝 실행...")
 
             try:
@@ -134,76 +124,62 @@ class Game:
                 print("'opening.py'를 찾을 수 없습니다. 오프닝 건너뜀.")
             except Exception as e:
                 print(f"오프닝 실행 중 오류: {e}")
+
             # 오프닝 끝나면 스킬 선택 화면으로 전환
             self.game_state = 'SKILL_SELECT'
+
             # screens['SKILL_SELECT']를 새로 생성
             self.screens['SKILL_SELECT'] = SkillSelectScreen(self.all_player_skills)
             self.current_screen = self.screens['SKILL_SELECT']
+
         elif isinstance(result, tuple) and result[0] == 'GAME_START':
             # 스킬 선택 완료. ('GAME_START', [선택한 스킬 객체 리스트])
             selected_skills = result[1]
             print(f"게임 시작! 선택한 스킬: {[skill.name for skill in selected_skills]}")
+
             # 새로운 GameScreen 인스턴스 생성
             self.screens['IN_GAME'] = GameScreen(selected_skills)
             self.game_state = 'IN_GAME'
             self.current_screen = self.screens['IN_GAME']
 
         elif result == 'GAME_OVER':
-
             print("게임 오버! 엔딩 실행...")
 
             try:
-
                 pygame.event.clear()
-
                 pygame.display.iconify()
-
                 proc = subprocess.Popen([sys.executable, "ending.py"])
-
                 proc.wait()
-
                 pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
                 bring_window_to_front()
 
                 if proc.returncode == 1:
-
                     print("엔딩에서 Q 입력 → 게임 재시작")
-
                     self.game_state = 'MENU'
-
                     self.screens = {
-
                         'MENU': MenuScreen(),
-
                         'SKILL_SELECT': SkillSelectScreen(self.all_player_skills),
-
                         'IN_GAME': None
-
                     }
 
                     self.current_screen = self.screens['MENU']
 
-
                 else:
-
                     print("엔딩에서 종료 선택 → 게임 완전 종료")
-
                     self.quit_game()
 
-
             except Exception as e:
-
                 print(f"엔딩 실행 중 오류 발생: {e}")
-
                 self.quit_game()
+
         elif result == 'BACK_TO_MENU':
             print("튜토리얼 종료 → 메뉴로 돌아감")
             self.return_to_menu()
+
     def quit_game(self):#종료
-        """게임을 종료합니다."""
+        """게임 종료"""
         pygame.quit()
         sys.exit()
-
 
 if __name__ == "__main__":
     game = Game()

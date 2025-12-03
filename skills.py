@@ -125,11 +125,11 @@ class Player_Meditation(Skill):
 
     def activate(self, game_manager, target_cells, player):
         print(f"[Player] 명상 발동!")
-        if player.hp == 1:
+        if player.hp <= 9:
             player.set_can_move(False)
             game_manager.add_timed_effect('meditation_heal', 2.0,
                                           on_expire=lambda: (player.set_can_move(True), player.heal(1)))
-        elif player.hp == 2:
+        elif player.hp == 10:
             # target_cells는 get_target_area에서 계산된 3x3 영역
             for cell in target_cells:
                 cell.update_hp(1)
@@ -148,6 +148,7 @@ class Player_Cross(Skill):
         for cell in target_cells:
             cell.update_hp(1)
 
+
 class Player_StrongConstruction(Skill):
     def __init__(self):
         super().__init__(
@@ -160,6 +161,7 @@ class Player_StrongConstruction(Skill):
         print(f"[Player] 강화건축 발동!")
         for cell in target_cells:
             cell.update_hp(2)
+
 
 class Player_EmergencyEscape(Skill):
     """
@@ -198,6 +200,7 @@ class Player_EmergencyEscape(Skill):
         #    "그 칸을 밟았을 때"와 똑같이 처리되도록 기존 함수 호출
         player.check_current_cell(game_manager.grid)
 
+
 class Player_Breakwater(Skill):
     """
     방파제: 선택한 위치를 중심으로 가로 1x5 줄의 칸 체력을 1 회복.
@@ -214,7 +217,6 @@ class Player_Breakwater(Skill):
         for cell in target_cells:
             cell.update_hp(1)
 
-# --- 여우 (Fox) 스킬 목록 ---
 
 # --- 여우 (Fox) 스킬 목록 ---
 
@@ -225,7 +227,7 @@ class Fox_Thorn(Skill):
     """
     def __init__(self):
         super().__init__(
-            name="가시", cost=2, delay=1.0,
+            name="가시", cost=2, delay=2.0,
             description="2x2 영역에 체력이 0 이하인 칸은 죽이고, 나머지는 체력 1 감소시킵니다.",
             target_type='area', target_size=(2, 2), owner='fox'
         )
@@ -237,13 +239,14 @@ class Fox_Thorn(Skill):
             else:
                 cell.update_hp(-1)
 
+
 class Fox_SuperThorn(Skill):
     """
     강한가시 : 2x2 영역을 죽인다
     """
     def __init__(self):
         super().__init__(
-            name="강한가시", cost=2, delay=1.0,
+            name="강한가시", cost=2, delay=2.0,
             description="2x2 영역에 체력이 0 이하인 칸을 죽인다",
             target_type='area', target_size=(2, 2), owner='fox'
         )
@@ -251,6 +254,8 @@ class Fox_SuperThorn(Skill):
     def activate(self, game_manager, target_cells, player):
         for cell in target_cells:
             cell.kill_cell()
+
+
 class Fox_Arrow(Skill):
     """
     화살 : 범위 5x6, 칸 체력 1씩 감소,
@@ -258,7 +263,7 @@ class Fox_Arrow(Skill):
     """
     def __init__(self):
         super().__init__(
-            name="화살", cost=5, delay=1.0,
+            name="화살", cost=5, delay=2.0,
             description="5x6 영역의 칸 체력을 1 감소시킵니다. 게가 맞으면 체력 1 감소.",
             target_type='area', target_size=(5, 6), owner='fox'
         )
@@ -272,21 +277,6 @@ class Fox_Arrow(Skill):
             player.take_damage(1, game_manager.grid)
 
 
-'''class Fox_Tracker(Skill):
-    """
-    추적자 : 3초간 게의 위치 여우한테 노출 (UI/연출용 플래그)
-    """
-    def __init__(self):
-        super().__init__(
-            name="추적자", cost=2, delay=0.0,
-            description="3초간 게의 위치가 노출됩니다.",
-            target_type='all', owner='fox'
-        )
-
-    def activate(self, game_manager, target_cells, player):
-        game_manager.add_timed_effect('tracker_reveal', 3.0)'''#폐기
-
-
 class Fox_Peek(Skill):
     """
     들춰보기 : 5x5 영역에 1초간 체력을 -1 했다가 +1
@@ -294,7 +284,7 @@ class Fox_Peek(Skill):
     """
     def __init__(self):
         super().__init__(
-            name="들춰보기", cost=3, delay=0.7,
+            name="들춰보기", cost=3, delay=1.5,
             description="5x5 영역의 칸을 1초간 체력 -1 했다가 +1로 되돌립니다.",
             target_type='area', target_size=(5, 5), owner='fox'
         )
@@ -322,7 +312,7 @@ class Fox_FocusHit(Skill):
     """
     def __init__(self):
         super().__init__(
-            name="집중타격", cost=5, delay=0.7,
+            name="집중타격", cost=5, delay=1.5,
             description="열 십 모양. 중심은 체력 2 감소, 나머지는 1 감소. 체력 0은 죽은 칸 처리.",
             target_type='area', owner='fox'  # get_target_area에서 이름으로 plus 모양 계산
         )
@@ -374,7 +364,7 @@ class Fox_DirectLight(Skill):
     """
     def __init__(self):
         super().__init__(
-            name="직사광선", cost=4, delay=0.3,
+            name="직사광선", cost=4, delay=1.0,
             description="세로 1x10 영역의 칸 체력을 1 감소시키고, 0이 되면 죽입니다.",
             target_type='area', target_size=(1, 10), owner='fox'
         )
@@ -386,8 +376,6 @@ class Fox_DirectLight(Skill):
             else:cell.update_hp(-1)
 
 
-
-
 class Fox_Cross(Skill):
     """
     십자가 : 가로 5, 세로 5인 십자가 모양 칸 체력을 1 감소
@@ -395,7 +383,7 @@ class Fox_Cross(Skill):
     """
     def __init__(self):
         super().__init__(
-            name="십자가", cost=2, delay=0.5,
+            name="십자가", cost=2, delay=1.0,
             description="가로 5, 세로 5의 십자가 모양 칸 체력을 1 감소시킵니다.",
             target_type='area', owner='fox'  # get_target_area에서 이름으로 cross 모양 계산
         )
@@ -411,7 +399,7 @@ class Fox_Cross(Skill):
 class Fox_Sandstorm(Skill):
     def __init__(self):
         super().__init__(
-            name="모래폭풍", cost=5, delay=1.0,
+            name="모래폭풍", cost=5, delay=2.0,
             description="4x4 영역의 칸 체력을 1 감소시키고, 0이 되면 죽입니다.",
             target_type='area', target_size=(4, 4), owner='fox'
         )
@@ -421,7 +409,6 @@ class Fox_Sandstorm(Skill):
             cell.update_hp(-1)
             if cell.hp == 0:
                 cell.kill_cell()
-
 
 
 # --- 스킬 로드 함수 ---
@@ -438,7 +425,6 @@ def load_all_player_skills():
         Player_StrongConstruction(),
         Player_EmergencyEscape(),
         Player_Breakwater()
-        # (새로운 스킬 추가)
     ]
 
 
@@ -452,5 +438,5 @@ def load_all_fox_skills():
         Fox_FocusHit(),
         Fox_DirectLight(),
         Fox_Cross(),
-        Fox_Sandstorm()  # 새로 추가된 스킬
+        Fox_Sandstorm()
     ]

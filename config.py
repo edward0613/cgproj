@@ -77,6 +77,7 @@ IMAGE_PATH = {
     'TUTORIAL_4': 'tutorial4.png',
     'TUTORIAL_5': 'tutorial5.png'
 }
+
 SOUND_PATH = {
     "GAME_BGM": "Crab and Fox Chase.mp3"
 }

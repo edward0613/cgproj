@@ -5,7 +5,7 @@ import math
 
 from SpeechBubble import (
     OpeningSpeechBubble,
-    load_hanna_fonts,
+    load_fonts,
 )
 
 pygame.init()
@@ -18,7 +18,7 @@ pygame.display.set_caption("Crab & Fox Opening")
 clock = pygame.time.Clock()
 
 # ===== 폰트 (공통: 한나체) =====
-font_main, font_small = load_hanna_fonts()
+font_main, font_small = load_fonts()
 
 # ===== 이미지 로드 =====
 sea_bg = pygame.image.load("sea.png").convert()

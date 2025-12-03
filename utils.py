@@ -5,7 +5,6 @@ from config import GRID_START_X, GRID_START_Y, CELL_WIDTH, CELL_HEIGHT, GRID_WID
 # 이미지 로딩 캐시
 IMAGE_CACHE = {}
 
-
 def load_image(path, use_colorkey=False, colorkey_color=None,alpha=None):
     """
     이미지를 로드하고 캐시합니다.
@@ -34,11 +33,10 @@ def load_image(path, use_colorkey=False, colorkey_color=None,alpha=None):
                 colorkey_color = image.get_at((0, 0))
             image.set_colorkey(colorkey_color, pygame.RLEACCEL)
 
-        # 알파 채널이 있는 PNG의 경우 convert_alpha() 사용
-
-
         IMAGE_CACHE[path] = image
+
         return image
+
     except pygame.error as e:
         print(f"이미지 로딩 오류 '{path}': {e}")
         image = pygame.Surface((CELL_WIDTH, CELL_HEIGHT))
@@ -46,10 +44,8 @@ def load_image(path, use_colorkey=False, colorkey_color=None,alpha=None):
         IMAGE_CACHE[path] = image
         return image
 
-
 # 폰트 로딩 캐시
 FONT_CACHE = {}
-
 
 def get_font(font_path, size):
     """지정된 경로와 크기의 폰트 객체를 로드하고 캐시합니다."""
@@ -90,7 +86,7 @@ def get_screen_pos(grid_x, grid_y):
 
 def calculate_target_area(center_grid_pos, size_x, size_y):
     """
-    기획서의 복잡한 스킬 범위 계산 로직을 구현합니다.
+    기획서의 복잡한 스킬 범위 계산 로직을 구현.
     center_grid_pos: (x, y) 튜플
     size_x, size_y: 범위 크기 (예: 3, 3)
     반환: [(x1, y1), (x2, y2), ...] 형태의 그리드 좌표 리스트

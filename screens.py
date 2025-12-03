@@ -558,8 +558,14 @@ class GameManager:
             k=random.randint(1, 15)
             if k==1:
                 target_pos = (self.player.grid_x, self.player.grid_y)
-            else:
+            elif 2<=k<=6:
                 target_pos = (random.randint(0, GRID_WIDTH - 1), random.randint(0, GRID_HEIGHT - 1))
+            else:
+                while True:
+                    target_pos = (random.randint(0, GRID_WIDTH - 1), random.randint(0, GRID_HEIGHT - 1))
+                    targetcell=self.grid[target_pos[0]][target_pos[1]]
+                    if not targetcell.is_dead:
+                        break
 
             target_area_pos = skill_to_use.get_target_area(target_pos, player=self.player)
 

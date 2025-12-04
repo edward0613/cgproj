@@ -90,8 +90,8 @@ class Player_Reconstruction(Skill):
     def __init__(self):
         super().__init__(
             name="재건축", cost=6, delay=0.5,
-            description="4x4 영역 내 죽은 칸을 체력 1, 최대체력 1로 부활시킵니다.",
-            target_type='area', target_size=(4, 4)
+            description="2x4 영역 내 죽은 칸을 체력 1, 최대체력 1로 부활시킵니다.",
+            target_type='area', target_size=(2, 4)
         )
 
     def activate(self, game_manager, target_cells, player):
@@ -118,8 +118,8 @@ class Player_ConstructionWork(Skill):
 class Player_Meditation(Skill):
     def __init__(self):
         super().__init__(
-            name="명상", cost=2, delay=0.0,
-            description="체력 1: 2초간 이동 불가, 체력 1 회복. 체력 2: 3x3 칸 체력 +1",
+            name="명상", cost=4, delay=0.0,
+            description="체력 1~9: 2초간 이동 불가, 체력 1 회복. 체력 10: 3x3 칸 체력 +1",
             target_type='self'
         )
 

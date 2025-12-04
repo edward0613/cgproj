@@ -558,7 +558,7 @@ class GameManager:
             k=random.randint(1, 15)
             if k==1:
                 target_pos = (self.player.grid_x, self.player.grid_y)
-            elif 2<=k<=6:
+            elif 2<=k<=4:
                 target_pos = (random.randint(0, GRID_WIDTH - 1), random.randint(0, GRID_HEIGHT - 1))
             else:
                 while True:

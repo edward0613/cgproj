@@ -1,5 +1,5 @@
 import pygame
-from sympy.abc import alpha
+
 
 from config import WHITE, BLACK, GRAY,GREEN, FONT_PATH, IMAGE_PATH,BLUE
 from utils import get_font, load_image
@@ -119,7 +119,7 @@ class NotificationBar:
         self.font = get_font(FONT_PATH, font_size)
         self.fox_icon = None
         try:
-            icon_image = load_image(IMAGE_PATH['FOX_ICON'],alpha=alpha)
+            icon_image = load_image(IMAGE_PATH['FOX_ICON'],alpha=True)
             self.fox_icon = pygame.transform.scale(icon_image, ((1280*(height-10))//731,height - 10))  # 아이콘 크기 조절
         except KeyError:
             print("알림창: fox1.png 이미지를 찾을 수 없습니다.")
